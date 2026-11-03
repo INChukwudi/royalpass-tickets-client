@@ -1,0 +1,347 @@
+﻿<!-- ═══════════════════════════════════════════════════════════
+     STEP: EVENTS LIST
+════════════════════════════════════════════════════════════ -->
+@if (step() === 'events') {
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero__overlay"></div>
+    <div class="hero__content" data-aos="fade-up">
+      <div class="hero__badge">
+        <span class="material-icons">music_note</span> Live Concerts
+      </div>
+      <h1 class="hero__title">Experience the<br><span class="gradient-text">Power of Choral Music</span></h1>
+      <p class="hero__sub">Secure your seat for unforgettable live performances. Book tickets in seconds, collect digitally.</p>
+      <div class="hero__actions">
+        <a href="#events" class="btn-gold hero__cta">
+          <span class="material-icons">confirmation_number</span> Get Tickets
+        </a>
+        <a routerLink="/tickets/lookup" class="btn-ghost">
+          <span class="material-icons">search</span> Find My Tickets
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <section class="section section--dark" id="events">
+      <div class="container text-center py-5">
+        <mat-spinner diameter="44" style="margin:0 auto 16px"></mat-spinner>
+        <p style="color:var(--text-muted)">Loading events…</p>
+      </div>
+    </section>
+  }
+
+  <!-- No events -->
+  @else if (events().length === 0) {
+    <section class="section" id="events">
+      <div class="container">
+        <div class="empty-state" data-aos="fade-up">
+          <span class="material-icons">event_busy</span>
+          <h2>No Events On Sale</h2>
+          <p>Check back soon — new concerts are being planned.</p>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Events grid -->
+  @else {
+    <section class="section section--light" id="events">
+      <div class="container">
+        <div class="section-header" data-aos="fade-up">
+          <h2 class="section-title">Upcoming Concerts</h2>
+          <p class="section-sub">Select an event below to choose your tickets</p>
+        </div>
+        <div class="events-grid">
+          @for (evt of events(); track evt.id; let i = $index) {
+            <div class="event-card" [attr.data-aos]="'fade-up'" [attr.data-aos-delay]="i * 80">
+              <div class="event-card__banner"
+                   [style.background-image]="evt.bannerUrl ? 'url(' + evt.bannerUrl + ')' : null">
+                @if (!evt.bannerUrl) {
+                  <span class="material-icons event-card__banner-icon">music_note</span>
+                }
+                <div class="event-card__overlay"></div>
+                <div class="event-card__meta-overlay">
+                  <span class="event-tag">{{ evt.ticketTypes.length }} ticket type{{ evt.ticketTypes.length !== 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+              <div class="event-card__body">
+                <h3 class="event-card__title">{{ evt.title }}</h3>
+                <div class="event-card__info">
+                  <span><span class="material-icons">calendar_today</span> {{ evt.eventDate | date:'EEE, MMM d, y' }}</span>
+                  <span><span class="material-icons">schedule</span> {{ evt.eventDate | date:'h:mm a' }}</span>
+                  <span><span class="material-icons">place</span> {{ evt.venue }}</span>
+                </div>
+                <div class="event-card__prices">
+                  @for (tt of evt.ticketTypes; track tt.id) {
+                    @if (tt.isVisible) {
+                      <span class="price-chip">{{ tt.name }} — {{ tt.price | currency:'NGN':'₦':'1.0-0' }}</span>
+                    }
+                  }
+                </div>
+                <button class="btn-gold event-card__btn" (click)="selectEvent(evt)">
+                  <span class="material-icons">confirmation_number</span> Select Tickets
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Features -->
+  <section class="section section--dark">
+    <div class="container">
+      <div class="section-header" data-aos="fade-up">
+        <h2 class="section-title">Why RoyalPass?</h2>
+      </div>
+      <div class="features-grid">
+        @for (f of features; track f.title) {
+          <div class="feature-card glass-dark" [attr.data-aos]="'fade-up'" [attr.data-aos-delay]="f.delay">
+            <div class="feature-card__icon"><span class="material-icons">{{ f.icon }}</span></div>
+            <h3>{{ f.title }}</h3>
+            <p>{{ f.desc }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="section section--light">
+    <div class="container">
+      <div class="section-header" data-aos="fade-up">
+        <h2 class="section-title">What Attendees Say</h2>
+      </div>
+      <div class="testimonials-grid">
+        @for (t of testimonials; track t.name) {
+          <div class="testimonial-card" [attr.data-aos]="'fade-up'" [attr.data-aos-delay]="t.delay">
+            <p class="testimonial-card__text">"{{ t.text }}"</p>
+            <div class="testimonial-card__author">
+              <div class="testimonial-card__avatar">{{ t.initials }}</div>
+              <div>
+                <strong>{{ t.name }}</strong>
+                <span>{{ t.role }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section cta-section">
+    <div class="container">
+      <div class="cta-box" data-aos="fade-up">
+        <h2>Ready to Experience the Music?</h2>
+        <p>Browse events above and book your seat in seconds.</p>
+        <a href="#events" class="btn-gold">
+          <span class="material-icons">confirmation_number</span> Book Now
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__brand">
+        <span class="material-icons">music_note</span>
+        <span>RoyalPass</span>
+      </div>
+      <p>© 2026 RoyalPass. Secure concert ticketing for choral groups.</p>
+      <div class="site-footer__links">
+        <a routerLink="/tickets/lookup">Find My Tickets</a>
+        <a routerLink="/admin/login">Admin Login</a>
+      </div>
+    </div>
+  </footer>
+}
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP: SELECT TICKETS
+════════════════════════════════════════════════════════════ -->
+@if (step() === 'select') {
+  <div class="flow-page">
+    <div class="flow-header">
+      <button class="flow-back" (click)="back()">
+        <span class="material-icons">arrow_back</span> Back
+      </button>
+      <div class="flow-steps">
+        <span class="flow-step active">1. Tickets</span>
+        <span class="flow-step">2. Details</span>
+        <span class="flow-step">3. Review</span>
+      </div>
+    </div>
+
+    <div class="flow-body">
+      <div class="flow-event-banner"
+           [style.background-image]="selectedEvent()?.bannerUrl ? 'url(' + selectedEvent()!.bannerUrl + ')' : null">
+        @if (!selectedEvent()?.bannerUrl) { <span class="material-icons flow-banner-icon">music_note</span> }
+        <div class="flow-event-banner__overlay"></div>
+        <div class="flow-event-banner__info">
+          <h2>{{ selectedEvent()?.title }}</h2>
+          <p><span class="material-icons">calendar_today</span> {{ selectedEvent()?.eventDate | date:'fullDate' }}</p>
+          <p><span class="material-icons">place</span> {{ selectedEvent()?.venue }}</p>
+        </div>
+      </div>
+
+      <div class="flow-content">
+        <h3 class="flow-section-title">Choose Your Tickets</h3>
+        <div class="tt-list">
+          @for (tt of selectedEvent()!.ticketTypes; track tt.id) {
+            @if (tt.isVisible) {
+              <div class="tt-row" [class.tt-row--selected]="getQty(tt.id) > 0">
+                <div class="tt-row__info">
+                  <div class="tt-row__name">{{ tt.name }}</div>
+                  @if (tt.description) { <div class="tt-row__desc">{{ tt.description }}</div> }
+                  <div class="tt-row__price">{{ tt.price | currency:'NGN':'₦':'1.0-0' }} per ticket</div>
+                </div>
+                <div class="tt-row__qty">
+                  <button class="qty-btn" (click)="decrement(tt)" [disabled]="getQty(tt.id) === 0">
+                    <span class="material-icons">remove</span>
+                  </button>
+                  <span class="qty-val">{{ getQty(tt.id) }}</span>
+                  <button class="qty-btn" (click)="increment(tt)" [disabled]="getQty(tt.id) >= tt.maxPerBuyer">
+                    <span class="material-icons">add</span>
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        @if (hasCart()) {
+          <div class="cart-summary">
+            <div class="cart-summary__lines">
+              @for (item of cartItems(); track item.ticketType.id) {
+                <div class="cart-summary__line">
+                  <span>{{ item.ticketType.name }} × {{ item.quantity }}</span>
+                  <span>{{ item.ticketType.price * item.quantity | currency:'NGN':'₦':'1.0-0' }}</span>
+                </div>
+              }
+            </div>
+            <div class="cart-summary__total">
+              <span>Total</span>
+              <strong>{{ cartTotal() | currency:'NGN':'₦':'1.0-0' }}</strong>
+            </div>
+          </div>
+        }
+
+        <button class="btn-gold flow-next" (click)="proceedToDetails()" [disabled]="!hasCart()">
+          Continue <span class="material-icons">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP: BUYER DETAILS
+════════════════════════════════════════════════════════════ -->
+@if (step() === 'details') {
+  <div class="flow-page">
+    <div class="flow-header">
+      <button class="flow-back" (click)="back()">
+        <span class="material-icons">arrow_back</span> Back
+      </button>
+      <div class="flow-steps">
+        <span class="flow-step done">1. Tickets</span>
+        <span class="flow-step active">2. Details</span>
+        <span class="flow-step">3. Review</span>
+      </div>
+    </div>
+
+    <div class="flow-body flow-body--narrow">
+      <h2 class="flow-title">Your Details</h2>
+      <p class="flow-hint">Your tickets will be sent to the email address below.</p>
+
+      <div class="buyer-form">
+        <div class="buyer-field">
+          <label>Full Name *</label>
+          <input [(ngModel)]="buyerName" placeholder="Jane Doe" type="text">
+        </div>
+        <div class="buyer-field">
+          <label>Email Address *</label>
+          <input [(ngModel)]="buyerEmail" placeholder="jane@example.com" type="email">
+        </div>
+        <div class="buyer-field">
+          <label>Phone Number *</label>
+          <input [(ngModel)]="buyerPhone" placeholder="+234 800 000 0000" type="tel">
+        </div>
+      </div>
+
+      <button class="btn-gold flow-next" (click)="proceedToReview()">
+        Review Order <span class="material-icons">arrow_forward</span>
+      </button>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════
+     STEP: REVIEW & PAY
+════════════════════════════════════════════════════════════ -->
+@if (step() === 'review') {
+  <div class="flow-page">
+    <div class="flow-header">
+      <button class="flow-back" (click)="back()" [disabled]="isSubmitting()">
+        <span class="material-icons">arrow_back</span> Back
+      </button>
+      <div class="flow-steps">
+        <span class="flow-step done">1. Tickets</span>
+        <span class="flow-step done">2. Details</span>
+        <span class="flow-step active">3. Review</span>
+      </div>
+    </div>
+
+    <div class="flow-body flow-body--narrow">
+      <h2 class="flow-title">Review Your Order</h2>
+
+      <div class="review-card">
+        <div class="review-card__section">
+          <div class="review-card__label">Event</div>
+          <div class="review-card__value">{{ selectedEvent()?.title }}</div>
+          <div class="review-card__sub">
+            {{ selectedEvent()?.eventDate | date:'fullDate' }} · {{ selectedEvent()?.venue }}
+          </div>
+        </div>
+        <div class="review-card__section">
+          <div class="review-card__label">Tickets</div>
+          @for (item of cartItems(); track item.ticketType.id) {
+            <div class="review-card__line">
+              <span>{{ item.ticketType.name }} × {{ item.quantity }}</span>
+              <span>{{ item.ticketType.price * item.quantity | currency:'NGN':'₦':'1.0-0' }}</span>
+            </div>
+          }
+        </div>
+        <div class="review-card__section">
+          <div class="review-card__label">Buyer</div>
+          <div class="review-card__value">{{ buyerName }}</div>
+          <div class="review-card__sub">{{ buyerEmail }} · {{ buyerPhone }}</div>
+        </div>
+        <div class="review-card__total">
+          <span>Total Amount</span>
+          <strong>{{ cartTotal() | currency:'NGN':'₦':'1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <div class="paystack-note">
+        <span class="material-icons">lock</span>
+        You will be securely redirected to Paystack to complete your payment.
+      </div>
+
+      <button class="btn-gold flow-next flow-pay-btn" (click)="placeOrder()" [disabled]="isSubmitting()">
+        @if (isSubmitting()) {
+          <mat-spinner diameter="20" strokeWidth="2.5"></mat-spinner>
+          <span>Redirecting…</span>
+        } @else {
+          <span class="material-icons">payment</span>
+          <span>Pay {{ cartTotal() | currency:'NGN':'₦':'1.0-0' }}</span>
+        }
+      </button>
+    </div>
+  </div>
+}

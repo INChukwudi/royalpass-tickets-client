@@ -1,0 +1,130 @@
+<div class="login-page">
+
+  <!-- Left panel: visual -->
+  <div class="login-visual d-none d-lg-flex">
+    <div class="visual-bg"></div>
+    <div class="visual-overlay"></div>
+
+    <div class="visual-notes" aria-hidden="true">
+      <span class="vnote vn1">♪</span>
+      <span class="vnote vn2">♫</span>
+      <span class="vnote vn3">♩</span>
+      <span class="vnote vn4">♬</span>
+    </div>
+
+    <div class="visual-content">
+      <div class="visual-brand">
+        <span class="material-icons">music_note</span>
+        RoyalPass
+      </div>
+      <h2 class="visual-headline">
+        Powering<br>
+        <em class="gradient-text">Extraordinary</em><br>
+        Performances
+      </h2>
+      <p class="visual-sub">
+        Manage events, sell tickets, and check in guests — all from one beautiful platform.
+      </p>
+      <div class="visual-stats">
+        <div class="vstat">
+          <span class="vstat__num">12K+</span>
+          <span class="vstat__label">Tickets Sold</span>
+        </div>
+        <div class="vstat">
+          <span class="vstat__num">48</span>
+          <span class="vstat__label">Events</span>
+        </div>
+        <div class="vstat">
+          <span class="vstat__num">99%</span>
+          <span class="vstat__label">Uptime</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel: form -->
+  <div class="login-form-panel">
+    <div class="login-card animate-fade-up">
+
+      <!-- Mobile brand -->
+      <div class="mobile-brand d-lg-none">
+        <div class="mobile-brand__icon">
+          <span class="material-icons">music_note</span>
+        </div>
+        <div class="mobile-brand__name">RoyalPass</div>
+      </div>
+
+      <div class="login-card__header">
+        <h1 class="login-card__title">Welcome back</h1>
+        <p class="login-card__sub">Sign in to your admin account</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="lform" autocomplete="on">
+
+        <!-- Email -->
+        <div class="lform__field">
+          <label class="lform__label">Email address</label>
+          <div class="lform__input-wrap" [class.is-error]="form.get('email')?.invalid && form.get('email')?.touched">
+            <span class="material-icons lform__icon">alternate_email</span>
+            <input
+              class="lform__input"
+              type="email"
+              formControlName="email"
+              placeholder="admin@example.com"
+              autocomplete="email" />
+          </div>
+          @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+            <span class="lform__error">Email is required.</span>
+          }
+          @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+            <span class="lform__error">Enter a valid email address.</span>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="lform__field">
+          <div class="lform__label-row">
+            <label class="lform__label">Password</label>
+            <a href="#" class="lform__forgot">Forgot password?</a>
+          </div>
+          <div class="lform__input-wrap" [class.is-error]="form.get('password')?.invalid && form.get('password')?.touched">
+            <span class="material-icons lform__icon">lock_outline</span>
+            <input
+              class="lform__input"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="••••••••"
+              autocomplete="current-password" />
+            <button type="button" class="lform__eye" (click)="showPassword.set(!showPassword())" tabindex="-1">
+              <span class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          @if (form.get('password')?.hasError('required') && form.get('password')?.touched) {
+            <span class="lform__error">Password is required.</span>
+          }
+        </div>
+
+        <!-- Submit -->
+        <button
+          class="lform__submit"
+          type="submit"
+          [disabled]="form.invalid || isLoading()">
+          @if (isLoading()) {
+            <span class="lform__spinner"></span>
+            Signing in…
+          } @else {
+            <span class="material-icons">login</span>
+            Sign In
+          }
+        </button>
+
+      </form>
+
+      <p class="login-back">
+        <a routerLink="/">← Back to public site</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+

@@ -1,1 +1,278 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+/* ─── Google Fonts ──────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ─── Material Theme ────────────────────────────────────────────────────────── */
+$choir-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$violet-palette,
+    tertiary: mat.$orange-palette,
+  ),
+  typography: (brand-family: 'Inter', plain-family: 'Inter'),
+  density: (scale: 0),
+));
+
+html {
+  @include mat.all-component-themes($choir-theme);
+}
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --gold:         #c9a84c;
+  --gold-light:   #f0d080;
+  --gold-dark:    #9a7a30;
+  --deep:         #0d0d1a;
+  --deep-mid:     #13132b;
+  --deep-card:    #1a1a35;
+  --deep-border:  rgba(201,168,76,0.18);
+  --surface:      #f8f7ff;
+  --surface-card: #ffffff;
+  --text-primary: #1a1a2e;
+  --text-muted:   #6c757d;
+  --success:      #22c55e;
+  --danger:       #ef4444;
+  --info:         #6366f1;
+
+  --radius-sm:    8px;
+  --radius-md:    16px;
+  --radius-lg:    24px;
+  --radius-xl:    32px;
+
+  --shadow-sm:    0 2px 8px rgba(0,0,0,.08);
+  --shadow-md:    0 8px 32px rgba(0,0,0,.12);
+  --shadow-lg:    0 24px 64px rgba(0,0,0,.18);
+  --shadow-gold:  0 8px 40px rgba(201,168,76,.25);
+
+  --transition:   all .35s cubic-bezier(.4,0,.2,1);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  background: var(--surface);
+  color: var(--text-primary);
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+h1, h2, h3, .display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Prevent horizontal overflow on mobile */
+body { overflow-x: hidden; }
+
+/* Tap highlight */
+a, button { -webkit-tap-highlight-color: transparent; }
+
+/* Better image handling */
+img { max-width: 100%; height: auto; display: block; }
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(.8); opacity: 1; }
+  100% { transform: scale(2);  opacity: 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-fade-up   { animation: fadeUp .7s cubic-bezier(.4,0,.2,1) both; }
+.animate-fade-in   { animation: fadeIn .5s ease both; }
+.animate-float     { animation: float 4s ease-in-out infinite; }
+.delay-1 { animation-delay: .1s; }
+.delay-2 { animation-delay: .2s; }
+.delay-3 { animation-delay: .3s; }
+.delay-4 { animation-delay: .4s; }
+.delay-5 { animation-delay: .5s; }
+
+/* ─── Utility overrides on top of Bootstrap ─────────────────────────────────── */
+.text-gold    { color: var(--gold) !important; }
+.bg-deep      { background: var(--deep) !important; }
+.bg-deep-card { background: var(--deep-card) !important; }
+
+/* ─── Glass card ─────────────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-md);
+}
+.glass-dark {
+  background: rgba(13,13,26,.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--deep-border);
+  border-radius: var(--radius-md);
+}
+
+/* ─── Gold gradient text ─────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Btn gold ───────────────────────────────────────────────────────────────── */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--deep);
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 32px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-gold);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 48px rgba(201,168,76,.4);
+    color: var(--deep);
+    text-decoration: none;
+  }
+  &:active { transform: translateY(0); }
+}
+
+/* ─── Toast Notifications ────────────────────────────────────────────────────── */
+
+/* Shared base — bigger, bolder, readable */
+.toast-success,
+.toast-error,
+.toast-warning,
+.toast-info {
+  /* Size & shape */
+  --mdc-snackbar-container-shape: 14px;
+  min-width: 320px !important;
+  max-width: 480px !important;
+
+  /* Text */
+  --mdc-snackbar-supporting-text-size: 0.95rem;
+  --mdc-snackbar-supporting-text-weight: 500;
+  --mdc-snackbar-supporting-text-line-height: 1.5;
+
+  /* Dismiss button */
+  --mat-snack-bar-button-color: rgba(255, 255, 255, 0.75);
+
+  /* Elevation */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28) !important;
+
+  .mat-mdc-snack-bar-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 8px 16px 20px !important;
+
+    /* Icon prefix injected via ::before on each variant below */
+    &::before {
+      font-family: 'Material Icons';
+      font-size: 22px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+  }
+
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+    font-size: 1.1rem;
+    font-weight: 700;
+    min-width: 36px;
+    padding: 0 12px;
+  }
+
+  @media (max-width: 480px) {
+    min-width: calc(100vw - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+  }
+}
+
+/* ── Success — green ── */
+.toast-success {
+  --mdc-snackbar-container-color: #16a34a;
+  --mdc-snackbar-supporting-text-color: #fff;
+
+  .mat-mdc-snack-bar-label::before {
+    content: 'check_circle';
+    color: #bbf7d0;
+  }
+}
+
+/* ── Error — red ── */
+.toast-error {
+  --mdc-snackbar-container-color: #dc2626;
+  --mdc-snackbar-supporting-text-color: #fff;
+
+  .mat-mdc-snack-bar-label::before {
+    content: 'error';
+    color: #fecaca;
+  }
+}
+
+/* ── Warning — amber ── */
+.toast-warning {
+  --mdc-snackbar-container-color: #d97706;
+  --mdc-snackbar-supporting-text-color: #fff;
+
+  .mat-mdc-snack-bar-label::before {
+    content: 'warning';
+    color: #fde68a;
+  }
+}
+
+/* ── Info — indigo ── */
+.toast-info {
+  --mdc-snackbar-container-color: #4f46e5;
+  --mdc-snackbar-supporting-text-color: #fff;
+
+  .mat-mdc-snack-bar-label::before {
+    content: 'info';
+    color: #c7d2fe;
+  }
+}
+
+/* ─── Material overrides ─────────────────────────────────────────────────────── */
+.mat-mdc-card {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+

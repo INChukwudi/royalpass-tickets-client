@@ -1,0 +1,109 @@
+<!-- Header -->
+<div class="el-header">
+  <div class="el-header__left">
+    <h1 class="el-title">Events</h1>
+    @if (!isLoading()) { <span class="el-count">{{ total() }} event{{ total() !== 1 ? 's' : '' }}</span> }
+  </div>
+  <a routerLink="/admin/events/new" class="btn-gold">
+    <span class="material-icons">add</span>
+    <span>New Event</span>
+  </a>
+</div>
+
+<!-- Loading skeleton -->
+@if (isLoading()) {
+  <div class="el-grid">
+    @for (s of [1,2,3,4,5,6]; track s) {
+      <div class="el-skeleton-card">
+        <div class="skeleton sk-img"></div>
+        <div class="el-skeleton-body">
+          <div class="skeleton sk-title"></div>
+          <div class="skeleton sk-line"></div>
+          <div class="skeleton sk-line short"></div>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Empty state -->
+@else if (events().length === 0) {
+  <div class="el-empty">
+    <div class="el-empty__icon">
+      <span class="material-icons">event_note</span>
+    </div>
+    <h2 class="el-empty__title">No events yet</h2>
+    <p class="el-empty__desc">Create your first concert event to get started.</p>
+    <a routerLink="/admin/events/new" class="btn-gold">
+      <span class="material-icons">add</span>
+      Create First Event
+    </a>
+  </div>
+}
+
+<!-- Event grid -->
+@else {
+  <div class="el-grid">
+    @for (evt of events(); track evt.id) {
+      <div class="el-card">
+        <!-- Banner -->
+        <div class="el-card__banner" [style.background-image]="evt.bannerUrl ? 'url(' + evt.bannerUrl + ')' : null">
+          @if (!evt.bannerUrl) {
+            <span class="material-icons el-card__banner-icon">music_note</span>
+          }
+          <div class="el-card__badges">
+            <span class="badge" [ngClass]="evt.isPublished ? 'badge--published' : 'badge--draft'">
+              {{ evt.isPublished ? 'Published' : 'Draft' }}
+            </span>
+            @if (evt.isPublished) {
+              <span class="badge" [ngClass]="evt.isSalesOpen ? 'badge--open' : 'badge--closed'">
+                {{ evt.isSalesOpen ? 'Sales Open' : 'Sales Closed' }}
+              </span>
+            }
+          </div>
+          <!-- Actions menu -->
+          <button class="el-card__menu-btn" [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
+            <span class="material-icons">more_vert</span>
+          </button>
+          <mat-menu #menu="matMenu">
+            <a mat-menu-item [routerLink]="['/admin/events', evt.id, 'edit']">
+              <mat-icon>edit</mat-icon><span>Edit</span>
+            </a>
+            <button mat-menu-item (click)="toggleStatus(evt)">
+              <mat-icon>{{ evt.isSalesOpen ? 'lock' : 'lock_open' }}</mat-icon>
+              <span>{{ evt.isSalesOpen ? 'Close Sales' : 'Open Sales' }}</span>
+            </button>
+          </mat-menu>
+        </div>
+
+        <!-- Body -->
+        <div class="el-card__body">
+          <h3 class="el-card__title">{{ evt.title }}</h3>
+          <div class="el-card__meta">
+            <span class="el-card__meta-item">
+              <span class="material-icons">calendar_today</span>
+              {{ evt.eventDate | date:'mediumDate' }}
+            </span>
+            <span class="el-card__meta-item">
+              <span class="material-icons">place</span>
+              {{ evt.venue }}
+            </span>
+          </div>
+          <div class="el-card__stats">
+            <div class="el-stat">
+              <span class="el-stat__val">{{ evt.ticketTypesCount }}</span>
+              <span class="el-stat__label">Ticket types</span>
+            </div>
+            <div class="el-stat">
+              <span class="el-stat__val">{{ evt.totalCapacity | number }}</span>
+              <span class="el-stat__label">Capacity</span>
+            </div>
+          </div>
+          <a [routerLink]="['/admin/events', evt.id, 'edit']" class="el-card__edit-link">
+            Manage event <span class="material-icons">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+    }
+  </div>
+}

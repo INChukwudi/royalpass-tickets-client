@@ -1,0 +1,66 @@
+﻿/* Shared admin placeholder page styles */
+.admin-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  min-height: 360px;
+  gap: 16px;
+
+  @media (min-width: 576px) { padding: 60px 24px; }
+
+  &__icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(201,168,76,.15), rgba(201,168,76,.04));
+    border: 1px solid rgba(201,168,76,.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      color: var(--gold);
+    }
+  }
+
+  &__title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+
+    @media (min-width: 576px) { font-size: 1.8rem; }
+  }
+
+  &__desc {
+    color: var(--text-muted);
+    font-size: .9rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 360px;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(201,168,76,.1);
+    border: 1px solid rgba(201,168,76,.25);
+    color: var(--gold-dark);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: .76rem;
+    font-weight: 600;
+
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  }
+}
+
+.reports-page{padding:16px}.reports-page h1{font-family:'Playfair Display',serif}.reports-page>p{color:var(--text-muted)}.report-grid{display:grid;gap:14px;margin-top:24px}.report-grid button{min-height:110px;padding:18px;border:1px solid var(--deep-border);border-radius:var(--radius-md);background:var(--surface-card);cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:6px;box-shadow:var(--shadow-sm);transition:var(--transition)}.report-grid button:hover{border-color:var(--gold);transform:translateY(-2px)}.report-grid mat-icon{color:var(--gold)}.report-grid span{color:var(--text-muted)}@media(min-width:576px){.report-grid{grid-template-columns:repeat(2,1fr)}}@media(min-width:992px){.reports-page{padding:28px}.report-grid{grid-template-columns:repeat(3,1fr)}}

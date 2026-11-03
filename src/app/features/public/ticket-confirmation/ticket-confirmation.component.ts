@@ -1,0 +1,118 @@
+import { Component, OnInit, signal, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { OrderService } from '../../../core/services/order.service';
+import { OrderSeatsResponse, SeatDto, VerifyPaymentResponse } from '../../../core/models/order.models';
+import { environment } from '../../../../environments/environment';
+import { ToastService } from '../../../core/services/toast.service';
+
+@Component({
+  selector: 'app-ticket-confirmation',
+  standalone: true,
+  imports: [CommonModule, RouterLink, MatProgressSpinnerModule],
+  templateUrl: './ticket-confirmation.component.html',
+  styleUrl: './ticket-confirmation.component.scss'
+})
+export class TicketConfirmationComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly orderService = inject(OrderService);
+  private readonly toast = inject(ToastService);
+
+  isLoading = signal(true);
+  isSuccess = signal(false);
+  result = signal<VerifyPaymentResponse | null>(null);
+  error = signal<string | null>(null);
+  seats = signal<OrderSeatsResponse | null>(null);
+  activeTicketId = signal<string | null>(null);
+  savingSeats = signal(false);
+  apiBase = environment.apiUrl.replace('/api', '');
+
+  ngOnInit(): void {
+    const ref = this.route.snapshot.queryParamMap.get('reference')
+              ?? this.route.snapshot.paramMap.get('reference');
+
+    if (!ref) {
+      this.error.set('No payment reference found.');
+      this.isLoading.set(false);
+      return;
+    }
+
+    this.orderService.verifyPayment({ reference: ref }).subscribe({
+      next: res => {
+        this.result.set(res);
+        this.isSuccess.set(res.status === 'success');
+        this.isLoading.set(false);
+        if (res.status === 'success') this.loadSeats(res);
+      },
+      error: () => {
+        this.error.set('Could not verify your payment. Please contact support with your reference.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  selectSeat(seat:SeatDto):void {
+    const map=this.seats(); const ticketId=this.activeTicketId();
+    if(!map || !ticketId || !this.isEligible(seat) || (seat.state!=='available' && seat.ticketId!==ticketId)) return;
+    const tickets=map.tickets.map(ticket=>ticket.id===ticketId
+      ? {...ticket,seatId:seat.id,seatLabel:seat.label}:ticket);
+    const seats=map.seats.map(item=>item.ticketId===ticketId
+      ? {...item,state:'available',ticketId:null}:item.id===seat.id
+        ? {...item,state:'selected',ticketId}:item);
+    this.seats.set({...map,tickets,seats});
+    const next=tickets.find(ticket=>!ticket.seatId);
+    if(next) this.activeTicketId.set(next.id);
+  }
+
+  isEligible(seat:SeatDto):boolean {
+    const ticket=this.seats()?.tickets.find(item=>item.id===this.activeTicketId());
+    return !!ticket&&ticket.band.toLowerCase()===seat.band.toLowerCase();
+  }
+
+  chooseSeat(ticketId:string,seatId:string):void { const seat=this.seats()?.seats.find(x=>x.id===seatId);if(seat){this.activeTicketId.set(ticketId);this.selectSeat(seat);} }
+
+  findSeatsTogether():void {
+    const map=this.seats();if(!map)return;const count=map.tickets.length;
+    const available=map.seats.filter(s=>(s.state==='available'||s.state==='selected')&&this.isEligible(s)).sort((a,b)=>a.section.localeCompare(b.section)||a.row-b.row||a.number-b.number);
+    for(let i=0;i<=available.length-count;i++){const run=available.slice(i,i+count);if(run.every((s,j)=>s.section===run[0].section&&s.row===run[0].row&&(j===0||s.number===run[j-1].number+1))){
+      let updated=map;run.forEach((seat,j)=>{this.seats.set(updated);this.activeTicketId.set(updated.tickets[j].id);this.selectSeat(seat);updated=this.seats()!;});this.toast.success('Found adjacent seats for your group.');return;
+    }}this.toast.warning('No adjacent group is currently available. Your existing seats are unchanged.');
+  }
+
+  saveSeatChanges():void {
+    const map=this.seats(); const result=this.result();
+    if(!map || !result || map.tickets.some(x=>!x.seatId)) { this.toast.warning('Choose a seat for every ticket.'); return; }
+    this.savingSeats.set(true);
+    this.orderService.saveSeats(result.reference,result.seatAccessToken,result.buyerEmail,map.tickets.map(x=>({ticketId:x.id,seatId:x.seatId!}))).subscribe({
+      next:value=>{this.seats.set(value);this.savingSeats.set(false);this.toast.success('Your seats have been updated. Download the refreshed tickets.');},
+      error:error=>{this.savingSeats.set(false);this.toast.error(error?.error?.message??'A selected seat is no longer available.');this.loadSeats(result);}
+    });
+  }
+
+  private loadSeats(result:VerifyPaymentResponse):void {
+    this.orderService.getSeats(result.reference,result.seatAccessToken).subscribe({next:value=>{
+      this.seats.set(value);this.activeTicketId.set(value.tickets[0]?.id??null);
+    }});
+  }
+
+  qrUrl(path: string): string {
+    return `${this.apiBase}${path}`;
+  }
+
+  downloadTicket(code: string): void {
+    this.orderService.downloadTicketPdf(code).subscribe({
+      next: pdf => this.orderService.saveDownload(pdf, `${code}.pdf`),
+      error: () => this.toast.error('Could not download this ticket.')
+    });
+  }
+
+  downloadOrder(): void {
+    const reference = this.result()?.reference;
+    if (!reference) return;
+    this.orderService.downloadOrderPdf(reference).subscribe({
+      next: pdf => this.orderService.saveDownload(pdf, `RoyalPass-${reference}.pdf`),
+      error: () => this.toast.error('Could not download your tickets.')
+    });
+  }
+}

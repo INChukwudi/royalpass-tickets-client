@@ -1,0 +1,105 @@
+<div class="manual-page">
+  <div class="page-heading">
+    <div>
+      <a routerLink="/admin/orders" class="back-link"><span class="material-icons">arrow_back</span> Orders</a>
+      <h1>Record a Manual Sale</h1>
+      <p>Backfill an existing purchase, issue valid QR tickets, and email them to the buyer.</p>
+    </div>
+    <div class="process"><span>1. Purchase</span><i></i><span>2. Tickets</span><i></i><span>3. Email</span></div>
+  </div>
+
+  @if (result(); as created) {
+    <section class="success-card">
+      <div class="success-icon"><span class="material-icons">check_circle</span></div>
+      <p class="eyebrow">Manual sale complete</p>
+      <h2>{{ created.ticketCodes.length }} ticket{{ created.ticketCodes.length === 1 ? '' : 's' }} issued</h2>
+      <p class="reference">Reference <strong>{{ created.reference }}</strong></p>
+
+      <div class="delivery" [class.delivery--warning]="!created.emailSent">
+        <span class="material-icons">{{ created.emailSent ? 'mark_email_read' : 'warning_amber' }}</span>
+        <span>{{ created.emailStatus }}</span>
+      </div>
+
+      <div class="ticket-codes">
+        @for (code of created.ticketCodes; track code) { <span>{{ code }}</span> }
+      </div>
+
+      <div class="success-actions">
+        <a class="btn-gold" [routerLink]="['/admin/orders', created.reference, 'seats']"><span class="material-icons">event_seat</span> Review Seats</a>
+        <a class="btn-gold" [href]="created.downloadUrl" target="_blank"><span class="material-icons">picture_as_pdf</span> Download Tickets</a>
+        <button type="button" class="secondary-btn" (click)="startAnother()"><span class="material-icons">add</span> Record Another</button>
+        <a routerLink="/admin/orders" class="text-link">View all orders</a>
+      </div>
+    </section>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <div class="form-main">
+          <section class="form-card">
+            <div class="card-heading"><span class="material-icons">event</span><div><h2>Event and ticket</h2><p>Select what the customer purchased.</p></div></div>
+            <div class="fields two-col">
+              <label class="field full"><span>Event *</span>
+                <select formControlName="eventId" (change)="onEventChange()">
+                  <option value="">{{ loadingEvents() ? 'Loading events…' : 'Select an event' }}</option>
+                  @for (event of events(); track event.id) { <option [value]="event.id">{{ event.title }} — {{ event.eventDate | date:'mediumDate' }}</option> }
+                </select>
+              </label>
+              <label class="field"><span>Ticket type *</span>
+                <select formControlName="ticketTypeId" (change)="updateSuggestedAmount()" [disabled]="!selectedEvent() || loadingTicketTypes()">
+                  <option value="">{{ loadingTicketTypes() ? 'Loading…' : 'Select ticket type' }}</option>
+                  @for (type of ticketTypes; track type.id) { <option [value]="type.id">{{ type.name }} — {{ type.price | currency:'NGN':'₦' }}</option> }
+                </select>
+              </label>
+              <label class="field"><span>Quantity *</span><input type="number" min="1" max="100" formControlName="quantity" (input)="updateSuggestedAmount()"></label>
+            </div>
+          </section>
+
+          <section class="form-card">
+            <div class="card-heading"><span class="material-icons">person</span><div><h2>Buyer details</h2><p>Tickets and delivery will use these details.</p></div></div>
+            <div class="fields two-col">
+              <label class="field full"><span>Full name *</span><input formControlName="buyerName" placeholder="Customer's full name"></label>
+              <label class="field"><span>Email address *</span><input type="email" formControlName="buyerEmail" placeholder="customer@example.com"></label>
+              <label class="field"><span>Phone number *</span><input formControlName="buyerPhone" placeholder="+234…"></label>
+            </div>
+          </section>
+
+          <section class="form-card">
+            <div class="card-heading"><span class="material-icons">payments</span><div><h2>Payment record</h2><p>Capture how and when the original payment was received.</p></div></div>
+            <div class="fields two-col">
+              <label class="field"><span>Amount paid (₦) *</span><input type="number" min="0" step="0.01" formControlName="amountPaid"></label>
+              <label class="field"><span>Payment method *</span><select formControlName="paymentMethod"><option>Cash</option><option>Bank Transfer</option><option>POS</option><option>Cheque</option><option>Complimentary</option><option>Other</option></select></label>
+              <label class="field"><span>Purchase date *</span><input type="datetime-local" formControlName="purchasedAt"></label>
+              <label class="field"><span>External reference</span><input formControlName="externalReference" placeholder="Receipt or transfer reference"></label>
+              <label class="field full"><span>Internal notes</span><textarea formControlName="notes" rows="3" placeholder="Optional context for administrators"></textarea></label>
+            </div>
+          </section>
+        </div>
+
+        <aside class="summary-card">
+          <p class="eyebrow">Issuance summary</p>
+          <h2>{{ selectedEvent()?.title || 'Choose an event' }}</h2>
+          <dl>
+            <div><dt>Ticket</dt><dd>{{ selectedTicketType?.name || '—' }}</dd></div>
+            <div><dt>Quantity</dt><dd>{{ form.controls.quantity.value }}</dd></div>
+            <div><dt>Recorded total</dt><dd>{{ form.controls.amountPaid.value | currency:'NGN':'₦' }}</dd></div>
+          </dl>
+          <label class="email-option">
+            <input type="checkbox" formControlName="sendEmail">
+            <span class="material-icons">forward_to_inbox</span>
+            <span><strong>Email tickets now</strong><small>Send the combined PDF attachment and download link after issuing.</small></span>
+          </label>
+          <label class="email-option">
+            <input type="checkbox" formControlName="assignSeats">
+            <span class="material-icons">event_seat</span>
+            <span><strong>Assign seats automatically</strong><small>Choose adjacent seats now. Turn this off to allocate them later from the booking.</small></span>
+          </label>
+          <div class="notice"><span class="material-icons">verified_user</span><p>This creates a paid order and active tickets. It immediately counts toward capacity, sales reports, and gate validation.</p></div>
+          <button class="btn-gold submit-btn" type="submit" [disabled]="saving()">
+            @if (saving()) { <mat-spinner diameter="19" strokeWidth="2"></mat-spinner><span>Issuing tickets…</span> }
+            @else { <span class="material-icons">confirmation_number</span><span>Issue Tickets</span> }
+          </button>
+        </aside>
+      </div>
+    </form>
+  }
+</div>

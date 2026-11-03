@@ -1,0 +1,97 @@
+﻿<div class="lookup-page">
+  <!-- Top bar -->
+  <div class="lookup-topbar">
+    <a routerLink="/" class="brand">
+      <span class="material-icons">music_note</span>
+      <span>RoyalPass</span>
+    </a>
+    <span class="lookup-topbar__title">Find My Tickets</span>
+  </div>
+
+  <div class="lookup-body">
+    <div class="lookup-hero" data-aos="fade-up">
+      <div class="lookup-hero__icon"><span class="material-icons">search</span></div>
+      <h1>Find Your Tickets</h1>
+      <p>Enter your email address or booking reference to retrieve your tickets.</p>
+    </div>
+
+    <!-- Search form -->
+    <div class="lookup-form" data-aos="fade-up" data-aos-delay="100">
+      <div class="search-type-tabs">
+        <button class="search-tab" [class.active]="searchType === 'email'" (click)="searchType = 'email'; searchValue = ''">
+          <span class="material-icons">email</span> By Email
+        </button>
+        <button class="search-tab" [class.active]="searchType === 'reference'" (click)="searchType = 'reference'; searchValue = ''">
+          <span class="material-icons">tag</span> By Reference
+        </button>
+      </div>
+
+      <div class="search-input-row">
+        <input
+          [(ngModel)]="searchValue"
+          [placeholder]="searchType === 'email' ? 'your@email.com' : 'CT-XXXXXXXXXXXX'"
+          [type]="searchType === 'email' ? 'email' : 'text'"
+          (keydown.enter)="search()"
+          class="search-input">
+        <button class="btn-gold search-btn" (click)="search()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <mat-spinner diameter="20" strokeWidth="2.5"></mat-spinner>
+          } @else {
+            <span class="material-icons">search</span>
+          }
+          <span>Search</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    @if (results() !== null && !isLoading()) {
+      @if (results()!.length === 0) {
+        <div class="lookup-empty" data-aos="fade-up">
+          <span class="material-icons">inbox</span>
+          <p>No tickets found. Double-check your {{ searchType === 'email' ? 'email address' : 'booking reference' }}.</p>
+        </div>
+      } @else {
+        <div class="lookup-results">
+          @for (order of results()!; track order.orderId) {
+            <div class="order-card" data-aos="fade-up">
+              <div class="order-card__header">
+                <div>
+                  <div class="order-card__event">{{ order.eventTitle }}</div>
+                  <div class="order-card__meta">
+                    <span><span class="material-icons">calendar_today</span> {{ order.eventDate | date:'EEE, MMM d, y' }}</span>
+                    <span><span class="material-icons">place</span> {{ order.eventVenue }}</span>
+                  </div>
+                </div>
+                <div class="order-card__ref">{{ order.reference }}</div>
+              </div>
+
+              <div class="order-card__tickets">
+                @for (ticket of order.tickets; track ticket.ticketId) {
+                  <div class="mini-ticket">
+                    <div class="mini-ticket__info">
+                      <div class="mini-ticket__type">{{ ticket.ticketTypeName }}</div>
+                      <div class="mini-ticket__code">{{ ticket.ticketCode }}</div>
+                      <span class="mini-ticket__status" [class.checked-in]="ticket.status === 'CheckedIn'">
+                        {{ ticket.status === 'CheckedIn' ? '✓ Checked In' : 'Active' }}
+                      </span>
+                    </div>
+                    <img [src]="qrUrl(ticket.qrCodeUrl)" [alt]="ticket.ticketCode" class="mini-ticket__qr">
+                  </div>
+                }
+              </div>
+              <div class="order-card__actions">
+                <button (click)="downloadOrder(order.reference)" [disabled]="actionReference() === order.reference">
+                  <span class="material-icons">picture_as_pdf</span> Download all
+                </button>
+                <button (click)="resend(order.reference)" [disabled]="actionReference() === order.reference">
+                  <span class="material-icons">forward_to_inbox</span> Resend email
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

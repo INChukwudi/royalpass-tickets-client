@@ -1,0 +1,85 @@
+<mat-sidenav-container class="admin-container">
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────────────────── -->
+  <mat-sidenav [mode]="sidenavMode()" [opened]="sidenavOpen()" class="admin-sidenav">
+
+    <!-- Brand -->
+    <div class="sidenav-brand">
+      <div class="brand-logo">
+        <span class="material-icons">music_note</span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">RoyalPass</span>
+        <span class="brand-sub">Admin Portal</span>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidenav-nav">
+      @for (item of visibleNavItems(); track item.route) {
+        <a class="nav-item" [routerLink]="item.route" routerLinkActive="nav-item--active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeOnMobile()">
+          <span class="nav-item__icon material-icons">{{ item.icon }}</span>
+          <span class="nav-item__label">{{ item.label }}</span>
+          <span class="nav-item__indicator"></span>
+        </a>
+      }
+    </nav>
+
+    <!-- Sidebar footer -->
+    <div class="sidenav-footer">
+      <div class="version-badge">v1.0 · Phase 1</div>
+    </div>
+  </mat-sidenav>
+
+  <!-- ── MAIN ────────────────────────────────────────────────────────── -->
+  <mat-sidenav-content class="admin-main">
+
+    <!-- Top bar -->
+    <header class="admin-topbar">
+      <button class="topbar-toggle" (click)="toggleSidenav()" aria-label="Toggle menu">
+        <span class="material-icons">menu</span>
+      </button>
+
+      <div class="topbar-breadcrumb">
+        <span class="material-icons">dashboard</span>
+        <span>Admin</span>
+      </div>
+
+      <div class="topbar-right">
+        <button class="topbar-icon-btn" aria-label="Notifications">
+          <span class="material-icons">notifications_none</span>
+          <span class="notif-dot"></span>
+        </button>
+
+        <button class="user-pill" [matMenuTriggerFor]="userMenu">
+          <div class="user-avatar">{{ userInitials() }}</div>
+          <span class="user-name">{{ currentUser()?.fullName }}</span>
+          <span class="material-icons" style="font-size:18px;color:var(--text-muted)">expand_more</span>
+        </button>
+
+        <mat-menu #userMenu="matMenu" class="user-dropdown">
+          <div class="user-menu-info">
+            <div class="user-menu-avatar">{{ userInitials() }}</div>
+            <div>
+              <div class="user-menu-name">{{ currentUser()?.fullName }}</div>
+              <div class="user-menu-email">{{ currentUser()?.email }}</div>
+              <span class="role-pill">{{ currentUser()?.role }}</span>
+            </div>
+          </div>
+          <mat-divider />
+          <button mat-menu-item (click)="logout()">
+            <span class="material-icons">logout</span>
+            Sign Out
+          </button>
+        </mat-menu>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="admin-content">
+      <router-outlet />
+    </main>
+
+  </mat-sidenav-content>
+</mat-sidenav-container>
+

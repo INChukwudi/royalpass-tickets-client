@@ -1,0 +1,245 @@
+﻿<!-- Top bar -->
+<div class="ef-topbar">
+  <a routerLink="/admin/events" class="ef-back">
+    <span class="material-icons">arrow_back</span>
+    <span>Events</span>
+  </a>
+  <div class="ef-topbar__title">
+    @if (isEditMode()) { <span>Edit Event</span> } @else { <span>New Event</span> }
+  </div>
+  <button class="btn-gold ef-save-btn" (click)="onSubmit()" [disabled]="isSaving()">
+    @if (isSaving()) {
+      <mat-spinner diameter="18" strokeWidth="2"></mat-spinner>
+    } @else {
+      <span class="material-icons">save</span>
+    }
+    <span>{{ isEditMode() ? 'Save Changes' : 'Create Event' }}</span>
+  </button>
+</div>
+
+<!-- Loading -->
+@if (isLoadingEvent()) {
+  <div class="ef-loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Loading event…</span>
+  </div>
+} @else {
+
+<!-- Tabs (edit mode only) -->
+@if (isEditMode()) {
+  <div class="ef-tabs">
+    <button class="ef-tab" [class.active]="activeTab() === 'details'" (click)="activeTab.set('details')">
+      <span class="material-icons">info</span> Details
+    </button>
+    <button class="ef-tab" [class.active]="activeTab() === 'tickets'" (click)="activeTab.set('tickets')">
+      <span class="material-icons">confirmation_number</span> Ticket Types
+      <span class="ef-tab__count">{{ ticketTypes.length }}</span>
+    </button>
+  </div>
+}
+
+<!-- ── DETAILS TAB ─────────────────────────────────────── -->
+@if (!isEditMode() || activeTab() === 'details') {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="ef-body">
+    <div class="ef-grid">
+
+      <!-- Left column -->
+      <div class="ef-col">
+
+        <!-- Banner upload -->
+        <div class="ef-card">
+          <div class="ef-card__header">
+            <span class="material-icons">image</span> Event Banner
+          </div>
+          <div class="ef-banner-upload" [class.has-preview]="bannerPreview()">
+            @if (bannerPreview()) {
+              <img [src]="bannerPreview()" alt="Banner preview" class="ef-banner-preview" />
+              <div class="ef-banner-overlay">
+                <label class="ef-banner-change" for="bannerInput">
+                  <span class="material-icons">photo_camera</span> Change
+                </label>
+              </div>
+            } @else {
+              <label class="ef-banner-placeholder" for="bannerInput">
+                <span class="material-icons">upload_file</span>
+                <span>Click to upload banner</span>
+                <span class="ef-banner-hint">JPG, PNG, WEBP — max 5 MB</span>
+              </label>
+            }
+            <input id="bannerInput" type="file" accept=".jpg,.jpeg,.png,.webp" class="ef-file-input" (change)="onBannerChange($event)">
+          </div>
+        </div>
+
+        <!-- Organiser -->
+        <div class="ef-card">
+          <div class="ef-card__header"><span class="material-icons">person</span> Organiser</div>
+          <div class="ef-fields">
+            <div class="ef-field">
+              <label>Contact Name *</label>
+              <input formControlName="organizerContact" placeholder="Jane Smith" [class.is-invalid]="hasError(getCtrl('organizerContact'), 'required')">
+              @if (hasError(getCtrl('organizerContact'), 'required')) { <span class="ef-error">Required</span> }
+            </div>
+            <div class="ef-field">
+              <label>Email</label>
+              <input formControlName="organizerEmail" type="email" placeholder="jane@example.com" [class.is-invalid]="hasError(getCtrl('organizerEmail'), 'email')">
+              @if (hasError(getCtrl('organizerEmail'), 'email')) { <span class="ef-error">Invalid email</span> }
+            </div>
+            <div class="ef-field">
+              <label>Phone</label>
+              <input formControlName="organizerPhone" placeholder="+1 555 000 0000">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right column -->
+      <div class="ef-col">
+
+        <!-- Core details -->
+        <div class="ef-card">
+          <div class="ef-card__header"><span class="material-icons">event</span> Event Details</div>
+          <div class="ef-fields">
+            <div class="ef-field ef-field--full">
+              <label>Title *</label>
+              <input formControlName="title" placeholder="Handel's Messiah — Christmas Concert" [class.is-invalid]="hasError(getCtrl('title'), 'required')">
+              @if (hasError(getCtrl('title'), 'required')) { <span class="ef-error">Required</span> }
+            </div>
+            <div class="ef-field">
+              <label>Date & Time *</label>
+              <input formControlName="eventDate" type="datetime-local" [class.is-invalid]="hasError(getCtrl('eventDate'), 'required')">
+              @if (hasError(getCtrl('eventDate'), 'required')) { <span class="ef-error">Required</span> }
+            </div>
+            <div class="ef-field">
+              <label>Venue *</label>
+              <input formControlName="venue" placeholder="Royal Concert Hall, London" [class.is-invalid]="hasError(getCtrl('venue'), 'required')">
+              @if (hasError(getCtrl('venue'), 'required')) { <span class="ef-error">Required</span> }
+            </div>
+            <div class="ef-field">
+              <label>Customer seat changes close</label>
+              <input formControlName="seatSelectionClosesAt" type="datetime-local">
+              <small>Defaults to 24 hours before the event.</small>
+            </div>
+            <div class="ef-field ef-field--full">
+              <label>Description *</label>
+              <textarea formControlName="description" rows="5" placeholder="Describe the event…" [class.is-invalid]="hasError(getCtrl('description'), 'required')"></textarea>
+              @if (hasError(getCtrl('description'), 'required')) { <span class="ef-error">Required</span> }
+            </div>
+          </div>
+        </div>
+
+        <!-- Visibility -->
+        <div class="ef-card">
+          <div class="ef-card__header"><span class="material-icons">visibility</span> Visibility</div>
+          <label class="ef-toggle">
+            <div class="ef-toggle__track" [class.on]="form.get('isPublished')?.value">
+              <div class="ef-toggle__thumb"></div>
+            </div>
+            <input type="checkbox" formControlName="isPublished" hidden>
+            <span>
+              <strong>{{ form.get('isPublished')?.value ? 'Published' : 'Draft' }}</strong>
+              — {{ form.get('isPublished')?.value ? 'Visible on the public site' : 'Only visible to admins' }}
+            </span>
+          </label>
+        </div>
+
+        <!-- Submit (mobile sticky) -->
+        <div class="ef-submit-row">
+          <button type="submit" class="btn-gold ef-submit-btn" [disabled]="isSaving()">
+            @if (isSaving()) { <mat-spinner diameter="18" strokeWidth="2"></mat-spinner> }
+            @else { <span class="material-icons">save</span> }
+            {{ isEditMode() ? 'Save Changes' : 'Create Event' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </form>
+}
+
+<!-- ── TICKET TYPES TAB ────────────────────────────────── -->
+@if (isEditMode() && activeTab() === 'tickets') {
+  <div class="ef-body">
+    <div class="ef-tickets-header">
+      <p class="ef-tickets-hint">Add ticket categories (e.g. General Admission, VIP). Save each row individually.</p>
+      <button class="btn-gold" (click)="addTicketType()">
+        <span class="material-icons">add</span> Add Ticket Type
+      </button>
+    </div>
+
+    @if (ticketTypes.length === 0) {
+      <div class="ef-tt-empty">
+        <span class="material-icons">confirmation_number</span>
+        <p>No ticket types yet. Add one above.</p>
+      </div>
+    }
+
+    <div class="ef-tt-list" [formGroup]="ticketForm">
+      <ng-container formArrayName="types">
+        @for (ctrl of ticketTypes.controls; track $index; let i = $index) {
+          <div class="ef-tt-card" [formGroupName]="i">
+            <div class="ef-tt-card__header">
+              <span class="ef-tt-card__index">#{{ i + 1 }}</span>
+              <input formControlName="name" class="ef-tt-name-input" placeholder="e.g. General Admission">
+              <button class="ef-tt-delete" (click)="deleteTicketType(i)" [disabled]="deletingTicketId() === ctrl.value.id" title="Remove">
+                @if (deletingTicketId() === ctrl.value.id) {
+                  <mat-spinner diameter="16" strokeWidth="2"></mat-spinner>
+                } @else {
+                  <span class="material-icons">delete_outline</span>
+                }
+              </button>
+            </div>
+            <div class="ef-tt-fields">
+              <div class="ef-field">
+                <label>Price ($)</label>
+                <input formControlName="price" type="number" min="0" step="0.01" placeholder="0.00">
+              </div>
+              <div class="ef-field">
+                <label>Total Qty</label>
+                <input formControlName="totalQuantity" type="number" min="1" placeholder="100">
+              </div>
+              <div class="ef-field">
+                <label>Max / buyer</label>
+                <input formControlName="maxPerBuyer" type="number" min="1" placeholder="10">
+              </div>
+              <div class="ef-field">
+                <label>Sort Order</label>
+                <input formControlName="sortOrder" type="number" placeholder="0">
+              </div>
+              <div class="ef-field">
+                <label>Sales Start</label>
+                <input formControlName="salesStartDate" type="datetime-local">
+              </div>
+              <div class="ef-field">
+                <label>Sales End</label>
+                <input formControlName="salesEndDate" type="datetime-local">
+              </div>
+              <div class="ef-field ef-field--full">
+                <label>Description</label>
+                <input formControlName="description" placeholder="Optional description">
+              </div>
+              <div class="ef-field ef-field--full">
+                <label class="ef-toggle ef-toggle--sm">
+                  <div class="ef-toggle__track" [class.on]="ctrl.get('isVisible')?.value">
+                    <div class="ef-toggle__thumb"></div>
+                  </div>
+                  <input type="checkbox" formControlName="isVisible" hidden>
+                  <span>Visible to buyers</span>
+                </label>
+              </div>
+            </div>
+            <div class="ef-tt-footer">
+              <button class="btn-gold ef-tt-save-btn" (click)="saveTicketType(i)" [disabled]="savingTicketIndex() === i">
+                @if (savingTicketIndex() === i) { <mat-spinner diameter="16" strokeWidth="2"></mat-spinner> }
+                @else { <span class="material-icons">save</span> }
+                {{ ctrl.value.id ? 'Update' : 'Save' }}
+              </button>
+            </div>
+          </div>
+        }
+      </ng-container>
+    </div>
+  </div>
+}
+
+} <!-- end isLoadingEvent else -->

@@ -1,0 +1,61 @@
+<div class="users-page">
+  <header class="page-heading">
+    <div><span class="eyebrow">Access control</span><h1>Admin accounts</h1><p>Create staff accounts and choose exactly which operations each person can perform.</p></div>
+    <button class="btn-gold" type="button" (click)="openCreate()"><span class="material-icons">person_add</span> Add admin</button>
+  </header>
+  @if (loading()) { <div class="state-card">Loading accounts…</div> }
+  @else {
+    <section class="users-grid" aria-label="Administrator accounts">
+      @for (user of users(); track user.id) {
+        <article class="user-card" [class.user-card--inactive]="!user.isActive">
+          <div class="user-card__top">
+            <div class="avatar">{{ user.fullName.charAt(0).toUpperCase() }}</div>
+            <div class="identity"><h2>{{ user.fullName }}</h2><p>{{ user.email }}</p></div>
+            <span class="status" [class.status--inactive]="!user.isActive">{{ user.isActive ? 'Active' : 'Disabled' }}</span>
+          </div>
+          <div class="meta"><span>{{ user.role === 'SuperAdmin' ? 'Primary administrator' : 'Custom administrator' }}</span><span>Created {{ user.createdAt | date:'mediumDate' }}</span></div>
+          <div class="permission-chips">
+            @if (user.role === 'SuperAdmin') { <span>All operations</span> }
+            @else { @for (permission of user.permissions; track permission) { <span>{{ permissionName(permission) }}</span> } }
+          </div>
+          @if (user.role !== 'SuperAdmin') {
+            <button class="edit-button" type="button" (click)="openEdit(user)"><span class="material-icons">edit</span> Edit access</button>
+          } @else { <p class="protected-note"><span class="material-icons">lock</span> Protected owner account</p> }
+        </article>
+      }
+    </section>
+  }
+</div>
+
+@if (editorOpen()) {
+  <div class="editor-backdrop" (click)="closeEditor()">
+    <section class="editor" role="dialog" aria-modal="true" aria-labelledby="editor-title" (click)="$event.stopPropagation()">
+      <header class="editor__header">
+        <div><span class="eyebrow">{{ editing() ? 'Update account' : 'New account' }}</span><h2 id="editor-title">{{ editing() ? 'Edit admin access' : 'Create an admin account' }}</h2></div>
+        <button type="button" class="icon-button" aria-label="Close" (click)="closeEditor()"><span class="material-icons">close</span></button>
+      </header>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-grid">
+          <label class="field"><span>Full name</span><input formControlName="fullName" autocomplete="name"></label>
+          <label class="field"><span>Email address</span><input formControlName="email" type="email" autocomplete="email"></label>
+          <label class="field field--wide"><span>{{ editing() ? 'New password (leave blank to keep current)' : 'Temporary password' }}</span><input formControlName="password" type="password" autocomplete="new-password">@if (form.controls.password.touched && form.controls.password.invalid) { <small>Use at least 8 characters.</small> }</label>
+          @if (editing()) { <label class="active-toggle field--wide"><input type="checkbox" formControlName="isActive"><span>Account is active</span></label> }
+        </div>
+        <div class="permissions-heading">
+          <div><h3>Allowed operations</h3><p>The sidebar and API access both follow these selections.</p></div>
+          <div><button type="button" (click)="selectAll()">Select all</button><button type="button" (click)="clearAll()">Clear</button></div>
+        </div>
+        <div class="permissions-grid">
+          @for (permission of permissions(); track permission.key) {
+            <label class="permission-option" [class.permission-option--selected]="selectedPermissions().has(permission.key)">
+              <input type="checkbox" [checked]="selectedPermissions().has(permission.key)" (change)="togglePermission(permission.key)">
+              <span class="check"><span class="material-icons">check</span></span>
+              <span><strong>{{ permission.name }}</strong><small>{{ permission.description }}</small></span>
+            </label>
+          }
+        </div>
+        <footer class="editor__footer"><button class="secondary-button" type="button" (click)="closeEditor()">Cancel</button><button class="btn-gold" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : (editing() ? 'Save changes' : 'Create account') }}</button></footer>
+      </form>
+    </section>
+  </div>
+}

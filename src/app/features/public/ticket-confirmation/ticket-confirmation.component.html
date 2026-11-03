@@ -1,0 +1,120 @@
+﻿<div class="confirmation-page">
+  <div class="confirmation-topbar">
+    <div class="brand">
+      <span class="material-icons">music_note</span>
+      <span>RoyalPass</span>
+    </div>
+  </div>
+
+  <div class="confirmation-body">
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="conf-loading">
+        <mat-spinner diameter="48"></mat-spinner>
+        <p>Verifying your payment…</p>
+      </div>
+    }
+
+    <!-- Error -->
+    @else if (error()) {
+      <div class="conf-card conf-card--error">
+        <div class="conf-icon conf-icon--error">
+          <span class="material-icons">error_outline</span>
+        </div>
+        <h1>Verification Failed</h1>
+        <p>{{ error() }}</p>
+        <a routerLink="/" class="btn-gold">Back to Events</a>
+      </div>
+    }
+
+    <!-- Failed payment -->
+    @else if (!isSuccess()) {
+      <div class="conf-card conf-card--failed">
+        <div class="conf-icon conf-icon--failed">
+          <span class="material-icons">cancel</span>
+        </div>
+        <h1>Payment Unsuccessful</h1>
+        <p>Your payment was not completed. No tickets were issued.</p>
+        <p class="conf-ref">Reference: <strong>{{ result()?.reference }}</strong></p>
+        <a routerLink="/" class="btn-gold">Try Again</a>
+      </div>
+    }
+
+    <!-- Success -->
+    @else {
+      <div class="conf-card conf-card--success">
+        <div class="conf-icon conf-icon--success">
+          <span class="material-icons">check_circle</span>
+        </div>
+        <h1>You're In! 🎶</h1>
+        <p class="conf-sub">Your payment was successful. Here are your tickets.</p>
+        <p class="conf-ref">Booking Reference: <strong>{{ result()?.reference }}</strong></p>
+      </div>
+
+      @if (seats(); as seatMap) {
+        <section class="seat-allocation">
+          <div class="seat-heading">
+            <div><p class="eyebrow">Seat allocation</p><h2>Your seats are ready</h2><p>We placed tickets together where possible. Select a ticket, then an available seat if you want to change it.</p></div>
+            <div><button class="btn-ghost-dark" (click)="findSeatsTogether()" [disabled]="!seatMap.canCustomerChange">Keep group together</button> <button class="btn-gold" (click)="saveSeatChanges()" [disabled]="savingSeats() || !seatMap.canCustomerChange">{{ savingSeats() ? 'Saving…' : 'Save seats' }}</button></div>
+          </div>
+          <div class="ticket-tabs">
+            @for (ticket of seatMap.tickets; track ticket.id) {
+              <button [class.active]="activeTicketId()===ticket.id" (click)="activeTicketId.set(ticket.id)">
+                <small>{{ticket.code}}</small><strong>{{ticket.seatLabel || 'Choose seat'}}</strong>
+              </button>
+            }
+          </div>
+          <p class="map-scroll-hint">Swipe sideways to view the full auditorium</p>
+          <div class="seat-map-scroll" tabindex="0" aria-label="Scrollable auditorium seat map">
+          <div class="seat-map" aria-label="Auditorium seat map">
+            <div class="map-title">NUC Auditorium for the GCC 2026 HC</div><div class="console-line"><span>SOUND CONSOLE</span></div>
+            @for (seat of seatMap.seats; track seat.id) {
+              <button class="seat" [class]="'seat seat--'+seat.state" [attr.data-band]="seat.band.toLowerCase()" [attr.data-section]="seat.section" [style.left.%]="seat.x" [style.top.%]="seat.y"
+                [title]="seat.label+' · '+seat.band" [class.seat--ineligible]="!isEligible(seat)" [disabled]="!isEligible(seat) || (seat.state!=='available' && seat.ticketId!==activeTicketId())"
+                (click)="selectSeat(seat)"><span>{{seat.number}}</span></button>
+            }
+            <div class="stage">STAGE</div>
+          </div>
+          </div>
+          @if(!seatMap.canCustomerChange){<p class="seat-closed">Online changes closed {{seatMap.seatSelectionClosesAt|date:'medium'}}. The event team can still assist you.</p>}
+          <details class="accessible-seats"><summary>Use accessible seat list</summary>@for(ticket of seatMap.tickets;track ticket.id){<label>{{ticket.code}}<select [value]="ticket.seatId" (change)="chooseSeat(ticket.id,$any($event.target).value)" [disabled]="!seatMap.canCustomerChange"><option value="">Choose a seat</option>@for(seat of seatMap.seats;track seat.id){@if(seat.state==='available'||seat.ticketId===ticket.id){<option [value]="seat.id">{{seat.label}} · {{seat.band}}</option>}}</select></label>}</details>
+          <div class="seat-legend"><span><i class="available"></i>Available</span><span><i class="selected"></i>Your seats</span><span><i class="unavailable"></i>Unavailable</span></div>
+        </section>
+      }
+
+      <!-- Tickets -->
+      <div class="tickets-grid">
+        @for (ticket of result()!.tickets; track ticket.ticketId) {
+          <div class="ticket-card">
+            <div class="ticket-card__header">
+              <span class="material-icons">confirmation_number</span>
+              <span>{{ ticket.ticketTypeName }}</span>
+            </div>
+            <div class="ticket-card__code">{{ ticket.ticketCode }}</div>
+            <div class="ticket-card__seat"><span class="material-icons">event_seat</span> Seat {{ ticket.seatLabel }}</div>
+            <div class="ticket-card__qr">
+              <img [src]="qrUrl(ticket.qrCodeUrl)" [alt]="ticket.ticketCode" loading="lazy">
+            </div>
+            <div class="ticket-card__hint">Present this QR at the entrance</div>
+            <button class="ticket-card__download" (click)="downloadTicket(ticket.ticketCode)">
+              <span class="material-icons">download</span> Download PDF
+            </button>
+          </div>
+        }
+      </div>
+
+      <div class="conf-actions">
+        <button class="btn-ghost-dark" (click)="downloadOrder()">
+          <span class="material-icons">picture_as_pdf</span> Download All
+        </button>
+        <button class="btn-ghost-dark" onclick="window.print()">
+          <span class="material-icons">print</span> Print Tickets
+        </button>
+        <a routerLink="/" class="btn-gold">
+          <span class="material-icons">home</span> Back to Events
+        </a>
+      </div>
+    }
+  </div>
+</div>
