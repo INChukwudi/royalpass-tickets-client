@@ -45,8 +45,8 @@ export class TicketConfirmationComponent implements OnInit {
         this.isLoading.set(false);
         if (res.status === 'success') this.loadSeats(res);
       },
-      error: () => {
-        this.error.set('Could not verify your payment. Please contact support with your reference.');
+      error: err => {
+        this.error.set(err?.error?.message ?? 'Could not verify your payment. Please contact support with your reference.');
         this.isLoading.set(false);
       }
     });

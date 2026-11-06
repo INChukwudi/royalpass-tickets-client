@@ -78,7 +78,8 @@ export class AuthService {
       ['dashboard.view', '/admin/dashboard'], ['events.manage', '/admin/events'],
       ['orders.view', '/admin/orders'], ['orders.manual.create', '/admin/orders/manual'],
       ['tickets.view', '/admin/tickets'], ['tickets.checkin', '/admin/scanner'],
-      ['reports.view', '/admin/reports'], ['users.manage', '/admin/users']
+        ['reports.view', '/admin/reports'], ['users.manage', '/admin/users'],
+        ['organization.manage', '/admin/organization']
     ];
     return choices.find(([permission]) => this.hasPermission(permission))?.[1] ?? '/admin/login';
   }

@@ -39,6 +39,7 @@ export class AdminLayoutComponent {
     { label: 'Gate Scanner', icon: 'qr_code_scanner',    route: '/admin/scanner', permission: ADMIN_PERMISSIONS.checkInTickets },
     { label: 'Reports',      icon: 'bar_chart',          route: '/admin/reports', permission: ADMIN_PERMISSIONS.viewReports },
     { label: 'Users',        icon: 'manage_accounts',    route: '/admin/users', permission: ADMIN_PERMISSIONS.manageUsers },
+    { label: 'Organization', icon: 'business',           route: '/admin/organization', permission: ADMIN_PERMISSIONS.manageOrganization },
   ];
 
   readonly visibleNavItems = computed(() => {

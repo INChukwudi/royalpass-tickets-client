@@ -113,6 +113,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/users/user-list/user-list.component').then(m => m.UserListComponent)
       },
+      {
+        path: 'organization',
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageOrganization)],
+        loadComponent: () =>
+          import('./features/admin/organization/organization-settings.component').then(m => m.OrganizationSettingsComponent)
+      },
     ]
   },
 

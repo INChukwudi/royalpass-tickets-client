@@ -18,6 +18,7 @@ export const ADMIN_PERMISSIONS = {
   checkInTickets: 'tickets.checkin',
   viewReports: 'reports.view',
   manageUsers: 'users.manage',
+  manageOrganization: 'organization.manage',
 } as const;
 
 export interface LoginRequest {

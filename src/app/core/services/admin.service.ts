@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
-import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, PagedResponse, SaveAdminUserRequest, ScanResult } from '../models/admin.models';
+import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, OrganizationPaymentSettings, PagedResponse, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult } from '../models/admin.models';
 import { OrderSeatsResponse } from '../models/order.models';
 
 @Injectable({ providedIn: 'root' })
@@ -44,4 +44,6 @@ export class AdminService {
   permissions():Observable<AdminPermission[]>{return this.http.get<AdminPermission[]>(`${this.base}/users/permissions`);}
   createUser(request:SaveAdminUserRequest):Observable<AdminUser>{return this.http.post<AdminUser>(`${this.base}/users`,request);}
   updateUser(id:string,request:SaveAdminUserRequest):Observable<AdminUser>{return this.http.put<AdminUser>(`${this.base}/users/${id}`,request);}
+  organizationPaymentSettings():Observable<OrganizationPaymentSettings>{return this.http.get<OrganizationPaymentSettings>(`${this.base}/organization/payment-settings`);}
+  saveOrganizationPaymentSettings(request:SaveOrganizationPaymentSettingsRequest):Observable<OrganizationPaymentSettings>{return this.http.put<OrganizationPaymentSettings>(`${this.base}/organization/payment-settings`,request);}
 }

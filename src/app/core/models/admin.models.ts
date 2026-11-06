@@ -9,3 +9,12 @@ export interface DashboardData { revenue:number; ticketsSold:number; capacity:nu
 export interface AdminUser { id:string; fullName:string; email:string; role:string; isActive:boolean; permissions:string[]; createdAt:string; }
 export interface AdminPermission { key:string; name:string; description:string; }
 export interface SaveAdminUserRequest { fullName:string; email:string; password?:string; isActive?:boolean; permissions:string[]; }
+export interface OrganizationPaymentSettings {
+  organizationId:string;
+  organizationName:string;
+  hasOrganizationKey:boolean;
+  maskedKey:string|null;
+  updatedAt:string|null;
+  environmentFallbackAvailable:boolean;
+}
+export interface SaveOrganizationPaymentSettingsRequest { secretKey:string|null; useEnvironmentFallback:boolean; }

@@ -1,0 +1,57 @@
+<section class="settings-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Organization</span>
+      <h1>Payment settings</h1>
+      <p>Control which Paystack account receives payments for this organization's events.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"><mat-spinner diameter="38" /></div>
+  } @else if (settings(); as current) {
+    <article class="settings-card">
+      <div class="status-row">
+        <div>
+          <h2>{{ current.organizationName }}</h2>
+          <p class="muted">Secret keys are encrypted before storage and are never returned by the API.</p>
+        </div>
+        <span class="status" [class.status--configured]="current.hasOrganizationKey">
+          {{ current.hasOrganizationKey ? 'Organization key active' : 'Environment fallback' }}
+        </span>
+      </div>
+
+      @if (current.hasOrganizationKey) {
+        <div class="current-key">
+          <span>Current key</span>
+          <strong>{{ current.maskedKey }}</strong>
+          @if (current.updatedAt) { <small>Updated {{ current.updatedAt | date:'medium' }}</small> }
+        </div>
+      } @else {
+        <div class="fallback-note" [class.fallback-note--warning]="!current.environmentFallbackAvailable">
+          {{ current.environmentFallbackAvailable
+            ? 'Payments use the Paystack key configured in the server environment.'
+            : 'No payment key is configured. Add an organization key before accepting payments.' }}
+        </div>
+      }
+
+      <div class="field">
+        <label for="paystack-secret">New Paystack secret key</label>
+        <input id="paystack-secret" type="password" [(ngModel)]="secretKey"
+               placeholder="sk_live_••••••••" autocomplete="new-password" spellcheck="false">
+        <small>Use a test key while testing and a live key only after the Paystack business is activated.</small>
+      </div>
+
+      <div class="actions">
+        <button class="primary" type="button" [disabled]="saving()" (click)="saveKey()">
+          {{ saving() ? 'Saving…' : 'Save organization key' }}
+        </button>
+        @if (current.hasOrganizationKey) {
+          <button class="secondary" type="button" [disabled]="saving() || !current.environmentFallbackAvailable" (click)="useFallback()">
+            Use environment fallback
+          </button>
+        }
+      </div>
+    </article>
+  }
+</section>

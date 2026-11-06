@@ -1,0 +1,26 @@
+.settings-page { max-width: 900px; margin: 0 auto; }
+.page-header { margin-bottom: 1.5rem; }
+.eyebrow { color: var(--gold, #9a7a30); font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+h1 { margin: .25rem 0; font-size: 2rem; }
+.page-header p, .muted { color: var(--text-muted, #64748b); }
+.settings-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 1.5rem; box-shadow: 0 8px 30px rgba(15,23,42,.06); }
+.status-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.status-row h2 { margin: 0 0 .3rem; }
+.status { background: #f1f5f9; color: #475569; border-radius: 999px; padding: .4rem .75rem; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.status--configured { background: #dcfce7; color: #166534; }
+.current-key, .fallback-note { margin: 1.25rem 0; padding: 1rem; background: #f8fafc; border-radius: 10px; display: flex; gap: .75rem; align-items: center; }
+.current-key span, .current-key small { color: #64748b; }
+.current-key small { margin-left: auto; }
+.fallback-note--warning { background: #fff7ed; color: #9a3412; }
+.field { display: grid; gap: .45rem; margin-top: 1.25rem; }
+.field label { font-weight: 700; }
+.field input { width: 100%; padding: .8rem .9rem; border: 1px solid #cbd5e1; border-radius: 9px; font: inherit; }
+.field input:focus { outline: 2px solid rgba(154,122,48,.2); border-color: #9a7a30; }
+.field small { color: #64748b; }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+.actions button { border: 0; border-radius: 9px; padding: .75rem 1rem; font-weight: 700; cursor: pointer; }
+.actions button:disabled { opacity: .55; cursor: not-allowed; }
+.primary { background: #9a7a30; color: #fff; }
+.secondary { background: #f1f5f9; color: #334155; }
+.loading { display: grid; place-items: center; min-height: 240px; }
+@media (max-width: 640px) { .status-row, .current-key { align-items: flex-start; flex-direction: column; } .current-key small { margin-left: 0; } }
