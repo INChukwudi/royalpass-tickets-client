@@ -2,7 +2,7 @@
   <h1>Gate Scanner</h1>
   <div class="scanner-grid">
     <section class="panel"><h2>Camera</h2><zxing-scanner [enable]="cameraEnabled && !processing()" (scanSuccess)="scanSuccess($event)" /><button (click)="cameraEnabled = !cameraEnabled">{{ cameraEnabled ? 'Stop camera' : 'Start camera' }}</button></section>
-    <section class="panel"><h2>Manual entry</h2><div class="entry"><input [(ngModel)]="code" (keydown.enter)="submit()" placeholder="Ticket code"><button (click)="submit()" [disabled]="processing()">Validate</button></div>
+    <section class="panel"><h2>Manual scan token</h2><div class="entry"><input [(ngModel)]="code" (keydown.enter)="submit()" placeholder="rpt_..."><button (click)="submit()" [disabled]="processing()">Validate</button></div>
       @if (result(); as r) { <div class="result" [class.admit]="r.decision === 'admitted'" [class.warn]="r.decision === 'already_used'"><h3>{{ r.decision.replace('_', ' ') }}</h3><p>{{ r.message }}</p>@if(r.guestName){<strong>{{r.guestName}}</strong><span>{{r.eventTitle}} / {{r.ticketType}}</span><h2>SEAT {{r.seatLabel || 'UNASSIGNED'}}</h2>}</div> }
       <h2>Find attendee</h2><div class="entry"><input [(ngModel)]="query" (keydown.enter)="search()" placeholder="Name, phone or code"><button (click)="search()">Search</button></div>
       @for(t of matches();track t.ticketId){<div class="match"><span><strong>{{t.guestName}}</strong>{{t.ticketCode}} / {{t.status}} / Seat {{t.seatLabel || 'unassigned'}}</span>@if(t.status==='Active'){<button (click)="admit(t)">Admit</button>}</div>}
