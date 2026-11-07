@@ -1,2 +1,49 @@
-<section class="delivery-page"><header><div><p class="eyebrow">Operations</p><h1>Email delivery</h1><p>Monitor queued, sent, delivered and failed transactional messages.</p></div><label>Status<select [(ngModel)]="status" (change)="load()"><option value="">All</option><option>Pending</option><option>Processing</option><option>Sent</option><option>Delivered</option><option>Failed</option></select></label></header>
-@if(loading()){<p>Loading deliveries…</p>}@else{<div class="table-wrap"><table><thead><tr><th>Created</th><th>Message</th><th>Recipient</th><th>Status</th><th>Attempts</th><th>Last update</th><th></th></tr></thead><tbody>@for(item of items();track item.id){<tr><td>{{item.createdAt|date:'short'}}</td><td>{{item.kind}}</td><td>{{item.recipientEmail}}</td><td><span class="status" [attr.data-status]="item.status.toLowerCase()">{{item.status}}</span>@if(item.lastError){<small>{{item.lastError}}</small>}</td><td>{{item.attemptCount}}</td><td>{{(item.deliveredAt||item.failedAt||item.sentAt)|date:'short'}}</td><td>@if(item.status==='Failed'){<button (click)="retry(item)">Retry</button>}</td></tr>}@empty{<tr><td colspan="7">No email deliveries found.</td></tr>}</tbody></table></div>}</section>
+<section class="delivery-page">
+  <header>
+    <div>
+      <p class="eyebrow">Operations</p>
+      <h1>Email delivery</h1>
+      <p>Monitor queued, accepted, delivered, failed and spam-reported transactional messages.</p>
+    </div>
+    <label>
+      Status
+      <select [(ngModel)]="status" (change)="load()">
+        <option value="">All</option>
+        <option>Pending</option>
+        <option>Processing</option>
+        <option>Sent</option>
+        <option>Delivered</option>
+        <option>Failed</option>
+        <option>Complained</option>
+      </select>
+    </label>
+  </header>
+
+  @if (loading()) {
+    <p>Loading deliveries…</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Created</th><th>Message</th><th>Recipient</th><th>Status</th><th>Attempts</th><th>Last update</th><th></th></tr></thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <td>{{ item.createdAt | date:'short' }}</td>
+              <td>{{ item.kind }}</td>
+              <td>{{ item.recipientEmail }}</td>
+              <td>
+                <span class="status" [attr.data-status]="item.status.toLowerCase()">{{ item.status }}</span>
+                @if (item.lastError) { <small>{{ item.lastError }}</small> }
+              </td>
+              <td>{{ item.attemptCount }}</td>
+              <td>{{ (item.complainedAt || item.deliveredAt || item.failedAt || item.sentAt) | date:'short' }}</td>
+              <td>@if (item.status === 'Failed') { <button (click)="retry(item)">Retry</button> }</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7">No email deliveries found.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

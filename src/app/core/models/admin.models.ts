@@ -18,5 +18,5 @@ export interface OrganizationPaymentSettings {
   environmentFallbackAvailable:boolean;
 }
 export interface SaveOrganizationPaymentSettingsRequest { secretKey:string|null; useEnvironmentFallback:boolean; }
-export interface EmailDelivery { id:string;kind:string;recipientEmail:string;status:string;attemptCount:number;createdAt:string;sentAt:string|null;deliveredAt:string|null;failedAt:string|null;lastError:string|null;providerMessageId:string|null; }
+export interface EmailDelivery { id:string;kind:string;recipientEmail:string;status:string;attemptCount:number;createdAt:string;sentAt:string|null;deliveredAt:string|null;failedAt:string|null;complainedAt:string|null;lastError:string|null;providerMessageId:string|null; }
 export interface EmailDeliveryPage { items:EmailDelivery[];total:number;page:number;pageSize:number; }
