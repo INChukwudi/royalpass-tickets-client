@@ -272,6 +272,10 @@
           <label>Phone Number *</label>
           <input [(ngModel)]="buyerPhone" placeholder="+234 800 000 0000" type="tel">
         </div>
+        <div class="buyer-field">
+          <label>Referral Code <small>(optional)</small></label>
+          <input [(ngModel)]="referralCode" maxlength="64" placeholder="Enter the code you received" type="text">
+        </div>
       </div>
 
       <button class="btn-gold flow-next" (click)="proceedToReview()">
@@ -322,6 +326,12 @@
           <div class="review-card__value">{{ buyerName }}</div>
           <div class="review-card__sub">{{ buyerEmail }} · {{ buyerPhone }}</div>
         </div>
+        @if (referralCode) {
+          <div class="review-card__section">
+            <div class="review-card__label">Referral code</div>
+            <div class="review-card__value">{{ referralCode }}</div>
+          </div>
+        }
         <div class="review-card__total">
           <span>Total Amount</span>
           <strong>{{ cartTotal() | currency:'NGN':'₦':'1.0-0' }}</strong>

@@ -113,6 +113,12 @@ export const routes: Routes = [
           import('./features/admin/reports/reports.component').then(m => m.ReportsComponent)
       },
       {
+        path: 'referrals',
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.viewReports)],
+        loadComponent: () =>
+          import('./features/admin/referrals/referrals.component').then(m => m.ReferralsComponent)
+      },
+      {
         path: 'users',
         canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageUsers)],
         loadComponent: () =>

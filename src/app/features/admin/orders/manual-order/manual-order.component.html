@@ -70,6 +70,7 @@
               <label class="field"><span>Payment method *</span><select formControlName="paymentMethod"><option>Cash</option><option>Bank Transfer</option><option>POS</option><option>Cheque</option><option>Complimentary</option><option>Other</option></select></label>
               <label class="field"><span>Purchase date *</span><input type="datetime-local" formControlName="purchasedAt"></label>
               <label class="field"><span>External reference</span><input formControlName="externalReference" placeholder="Receipt or transfer reference"></label>
+              <label class="field"><span>Referral code</span><select formControlName="referralCode"><option value="">No referral code</option>@for (referral of referralCodes(); track referral.id) {<option [value]="referral.code">{{ referral.code }}{{ referral.label ? ' — ' + referral.label : '' }}</option>}</select></label>
               <label class="field full"><span>Internal notes</span><textarea formControlName="notes" rows="3" placeholder="Optional context for administrators"></textarea></label>
             </div>
           </section>

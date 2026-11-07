@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
-import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, EmailDeliveryPage, OrganizationPaymentSettings, PagedResponse, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult } from '../models/admin.models';
+import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, EmailDeliveryPage, OrganizationPaymentSettings, PagedResponse, ReferralCode, ReferralUsageReport, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult } from '../models/admin.models';
 import { OrderSeatsResponse, TicketTransfer } from '../models/order.models';
 
 @Injectable({ providedIn: 'root' })
@@ -39,7 +39,7 @@ export class AdminService {
   scan(code:string):Observable<ScanResult>{return this.http.post<ScanResult>(`${environment.apiUrl}/checkin/scan`,{code});}
   checkInSearch(query:string):Observable<CheckInSearchResult[]>{return this.http.get<CheckInSearchResult[]>(`${environment.apiUrl}/checkin/search`,{params:{query}});}
   dashboard():Observable<DashboardData>{return this.http.get<DashboardData>(`${this.base}/dashboard`);}
-  report(type:string):Observable<Blob>{return this.http.get(`${this.base}/reports/${type}`,{responseType:'blob'});}
+  report(type:string,eventId?:string):Observable<Blob>{return this.http.get(`${this.base}/reports/${type}`,{params:eventId?{eventId}:{},responseType:'blob'});}
   users():Observable<AdminUser[]>{return this.http.get<AdminUser[]>(`${this.base}/users`);}
   permissions():Observable<AdminPermission[]>{return this.http.get<AdminPermission[]>(`${this.base}/users/permissions`);}
   createUser(request:SaveAdminUserRequest):Observable<AdminUser>{return this.http.post<AdminUser>(`${this.base}/users`,request);}
@@ -49,4 +49,9 @@ export class AdminService {
   emailDeliveries(status?:string):Observable<EmailDeliveryPage>{return this.http.get<EmailDeliveryPage>(`${this.base}/email-deliveries`,{params:status?{status}:{}});}
   retryEmailDelivery(id:string):Observable<ApiResponse<never>>{return this.http.post<ApiResponse<never>>(`${this.base}/email-deliveries/${id}/retry`,{});}
   ticketTransfers(id:string):Observable<TicketTransfer[]>{return this.http.get<TicketTransfer[]>(`${this.base}/tickets/${id}/transfers`);}
+  eventReferralCodes(eventId:string):Observable<ReferralCode[]>{return this.http.get<ReferralCode[]>(`${this.base}/events/${eventId}/referral-codes`);}
+  referralCodes():Observable<ReferralCode[]>{return this.http.get<ReferralCode[]>(`${this.base}/referral-codes`);}
+  referralReport(eventId?:string):Observable<ReferralUsageReport>{return this.http.get<ReferralUsageReport>(`${this.base}/referral-codes/report`,{params:eventId?{eventId}:{}});}
+  importReferralCodes(codes:{code:string;label:string|null}[]):Observable<{created:number;updated:number;codes:ReferralCode[]}>{return this.http.put<{created:number;updated:number;codes:ReferralCode[]}>(`${this.base}/referral-codes/import`,{codes});}
+  setReferralCodeStatus(id:string,isActive:boolean):Observable<ReferralCode>{return this.http.patch<ReferralCode>(`${this.base}/referral-codes/${id}/status`,{id,isActive});}
 }

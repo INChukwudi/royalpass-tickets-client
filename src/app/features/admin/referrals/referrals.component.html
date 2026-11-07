@@ -1,0 +1,43 @@
+<section class="referrals-page">
+  <header class="page-header">
+    <div><p class="eyebrow">Sales attribution</p><h1>Referral codes</h1><p>See which internal referrals are driving paid ticket sales.</p></div>
+    <div class="header-actions">
+      <label>Event<select [(ngModel)]="selectedEventId" (change)="load()"><option value="">All events</option>@for (event of events(); track event.id) {<option [value]="event.id">{{ event.title }}</option>}</select></label>
+      <button type="button" class="secondary" (click)="export()"><mat-icon>download</mat-icon> Export</button>
+    </div>
+  </header>
+
+  @if (report(); as data) {
+    <div class="metrics">
+      <article><span>Attributed revenue</span><strong>{{ data.totals.attributedRevenue | currency:'NGN':'₦' }}</strong><small>{{ data.totals.attributedOrders }} paid orders · {{ data.totals.attributedTickets }} tickets</small></article>
+      <article><span>Unattributed revenue</span><strong>{{ data.totals.unattributedRevenue | currency:'NGN':'₦' }}</strong><small>{{ data.totals.unattributedOrders }} paid orders · {{ data.totals.unattributedTickets }} tickets</small></article>
+      <article><span>Attribution rate</span><strong>{{ data.totals.paidOrders ? (data.totals.attributedOrders / data.totals.paidOrders | percent:'1.0-1') : '—' }}</strong><small>Share of paid orders with a code</small></article>
+    </div>
+
+    @if (canManage) {
+      <section class="import-card">
+        <div><h2>Import referral codes</h2><p>Enter one per line as <code>CODE</code> or <code>CODE, Person or team</code>. Existing codes are updated and reactivated.</p></div>
+        <textarea [(ngModel)]="importText" rows="5" placeholder="ADA01, Ada&#10;CHOIR-NORTH, North team"></textarea>
+        <button type="button" (click)="importCodes()" [disabled]="saving()"><mat-icon>upload</mat-icon>{{ saving() ? 'Importing…' : 'Import codes' }}</button>
+      </section>
+    }
+
+    <section class="table-card">
+      <div class="table-heading"><div><h2>Code usage</h2><p>Only successful paid orders contribute to these totals.</p></div><span>{{ data.items.length }} codes</span></div>
+      @if (loading()) { <p class="state">Refreshing…</p> } @else {
+        <div class="table-wrap"><table><thead><tr><th>Code</th><th>Owner / label</th><th>Status</th><th>Orders</th><th>Tickets</th><th>Revenue</th><th>Channel</th><th>Last used</th><th></th></tr></thead><tbody>
+          @for (item of data.items; track item.referralCodeId) {
+            <tr>
+              <td><strong class="code">{{ item.code }}</strong></td><td>{{ item.label || '—' }}</td>
+              <td><span class="status" [class.inactive]="!item.isActive">{{ item.isActive ? 'Active' : 'Inactive' }}</span></td>
+              <td>{{ item.orders }}</td><td>{{ item.tickets }}</td><td>{{ item.revenue | currency:'NGN':'₦' }}</td>
+              <td><small>{{ item.onlineOrders }} online<br>{{ item.manualOrders }} manual</small></td>
+              <td>{{ item.lastUsedAt ? (item.lastUsedAt | date:'mediumDate') : 'Never' }}</td>
+              <td>@if (canManage) {<button class="toggle" type="button" (click)="toggle(item.referralCodeId, !item.isActive)" [disabled]="toggling() === item.referralCodeId">{{ item.isActive ? 'Disable' : 'Enable' }}</button>}</td>
+            </tr>
+          } @empty {<tr><td colspan="9" class="state">No referral codes yet. Import the organization’s list to get started.</td></tr>}
+        </tbody></table></div>
+      }
+    </section>
+  } @else if (loading()) { <p class="state">Loading referral usage…</p> }
+</section>

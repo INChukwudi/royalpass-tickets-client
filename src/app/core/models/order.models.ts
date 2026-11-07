@@ -6,6 +6,7 @@ export interface InitiateOrderRequest {
   buyerEmail: string;
   buyerPhone: string;
   callbackUrl: string;
+  referralCode?: string | null;
 }
 
 export interface InitiateOrderResponse {

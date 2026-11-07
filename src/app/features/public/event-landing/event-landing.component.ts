@@ -40,6 +40,7 @@ export class EventLandingComponent implements OnInit {
   buyerName = '';
   buyerEmail = '';
   buyerPhone = '';
+  referralCode = '';
 
   // Step: 'events' | 'select' | 'details' | 'review'
   step = signal<'events' | 'select' | 'details' | 'review'>('events');
@@ -94,6 +95,7 @@ export class EventLandingComponent implements OnInit {
   selectEvent(evt: EventDetailDto): void {
     this.selectedEvent.set(evt);
     this.cart.set({});
+    this.referralCode = '';
     this.step.set('select');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -150,7 +152,8 @@ export class EventLandingComponent implements OnInit {
       buyerName: this.buyerName,
       buyerEmail: this.buyerEmail,
       buyerPhone: this.buyerPhone,
-      callbackUrl
+      callbackUrl,
+      referralCode: this.referralCode.trim() || null
     }).subscribe({
       next: res => {
         // Redirect to Paystack

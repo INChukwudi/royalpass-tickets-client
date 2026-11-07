@@ -337,7 +337,7 @@
 .buyer-field {
   display: flex; flex-direction: column; gap: 6px;
   label { font-size: .82rem; font-weight: 700; color: var(--text-primary); }
-  input {
+  input, select {
     padding: 12px 16px; border: 1.5px solid rgba(0,0,0,.12);
     border-radius: var(--radius-sm); font-size: .95rem;
     font-family: 'Inter', sans-serif; transition: border-color .2s;

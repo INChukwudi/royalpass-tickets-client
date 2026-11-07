@@ -6,7 +6,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AdminService } from '../../../../core/services/admin.service';
 import { EventService } from '../../../../core/services/event.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import { CreateManualOrderResponse } from '../../../../core/models/admin.models';
+import { CreateManualOrderResponse, ReferralCode } from '../../../../core/models/admin.models';
 import { EventDetailDto, EventSummaryDto, TicketTypeDto } from '../../../../core/models/event.models';
 
 @Component({
@@ -28,6 +28,7 @@ export class ManualOrderComponent implements OnInit {
   readonly loadingTicketTypes = signal(false);
   readonly saving = signal(false);
   readonly result = signal<CreateManualOrderResponse | null>(null);
+  readonly referralCodes = signal<ReferralCode[]>([]);
 
   readonly form = this.fb.nonNullable.group({
     eventId: ['', Validators.required],
@@ -41,6 +42,7 @@ export class ManualOrderComponent implements OnInit {
     externalReference: [''],
     purchasedAt: [this.localDateTime(), Validators.required],
     notes: [''],
+    referralCode: [''],
     sendEmail: [true],
     assignSeats: [false]
   });
@@ -69,13 +71,16 @@ export class ManualOrderComponent implements OnInit {
   onEventChange(): void {
     const eventId = this.form.controls.eventId.value;
     this.form.controls.ticketTypeId.setValue('');
+    this.form.controls.referralCode.setValue('');
     this.selectedEvent.set(null);
+    this.referralCodes.set([]);
     if (!eventId) return;
     this.loadingTicketTypes.set(true);
     this.eventsService.getEvent(eventId).subscribe({
       next: event => {
         this.selectedEvent.set(event);
         this.loadingTicketTypes.set(false);
+        this.admin.eventReferralCodes(eventId).subscribe({next: codes => this.referralCodes.set(codes)});
       },
       error: () => {
         this.loadingTicketTypes.set(false);
@@ -102,6 +107,7 @@ export class ManualOrderComponent implements OnInit {
       ...value,
       externalReference: value.externalReference.trim() || null,
       notes: value.notes.trim() || null,
+      referralCode: value.referralCode || null,
       purchasedAt: new Date(value.purchasedAt).toISOString()
     }).subscribe({
       next: response => {
@@ -123,9 +129,10 @@ export class ManualOrderComponent implements OnInit {
     this.form.reset({
       eventId: '', ticketTypeId: '', buyerName: '', buyerEmail: '', buyerPhone: '', quantity: 1,
       amountPaid: 0, paymentMethod: 'Cash', externalReference: '', purchasedAt: this.localDateTime(),
-      notes: '', sendEmail: true, assignSeats: false
+      notes: '', referralCode: '', sendEmail: true, assignSeats: false
     });
     this.selectedEvent.set(null);
+    this.referralCodes.set([]);
   }
 
   private localDateTime(): string {
