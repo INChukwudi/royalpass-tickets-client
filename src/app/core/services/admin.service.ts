@@ -3,8 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
-import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, OrganizationPaymentSettings, PagedResponse, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult } from '../models/admin.models';
-import { OrderSeatsResponse } from '../models/order.models';
+import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, EmailDeliveryPage, OrganizationPaymentSettings, PagedResponse, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult } from '../models/admin.models';
+import { OrderSeatsResponse, TicketTransfer } from '../models/order.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -46,4 +46,7 @@ export class AdminService {
   updateUser(id:string,request:SaveAdminUserRequest):Observable<AdminUser>{return this.http.put<AdminUser>(`${this.base}/users/${id}`,request);}
   organizationPaymentSettings():Observable<OrganizationPaymentSettings>{return this.http.get<OrganizationPaymentSettings>(`${this.base}/organization/payment-settings`);}
   saveOrganizationPaymentSettings(request:SaveOrganizationPaymentSettingsRequest):Observable<OrganizationPaymentSettings>{return this.http.put<OrganizationPaymentSettings>(`${this.base}/organization/payment-settings`,request);}
+  emailDeliveries(status?:string):Observable<EmailDeliveryPage>{return this.http.get<EmailDeliveryPage>(`${this.base}/email-deliveries`,{params:status?{status}:{}});}
+  retryEmailDelivery(id:string):Observable<ApiResponse<never>>{return this.http.post<ApiResponse<never>>(`${this.base}/email-deliveries/${id}/retry`,{});}
+  ticketTransfers(id:string):Observable<TicketTransfer[]>{return this.http.get<TicketTransfer[]>(`${this.base}/tickets/${id}/transfers`);}
 }

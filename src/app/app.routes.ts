@@ -124,6 +124,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/organization/organization-settings.component').then(m => m.OrganizationSettingsComponent)
       },
+      {
+        path: 'email-deliveries',
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.viewOrders)],
+        loadComponent: () =>
+          import('./features/admin/email-deliveries/email-deliveries.component').then(m => m.EmailDeliveriesComponent)
+      },
     ]
   },
 

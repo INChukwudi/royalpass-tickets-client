@@ -1,7 +1,7 @@
 export interface PagedResponse<T> { items: T[]; total: number; page: number; pageSize: number; }
 export interface AdminOrder { id:string; reference:string; eventTitle:string; ticketType:string; buyerName:string; buyerEmail:string; buyerPhone:string; quantity:number; totalAmount:number; orderStatus:string; paymentStatus:string; source:string; paymentMethod:string|null; createdAt:string; paidAt:string|null; }
 export interface CreateManualOrderRequest { eventId:string; ticketTypeId:string; quantity:number; buyerName:string; buyerEmail:string; buyerPhone:string; amountPaid:number; paymentMethod:string; externalReference:string|null; notes:string|null; purchasedAt:string; sendEmail:boolean; assignSeats:boolean; }
-export interface CreateManualOrderResponse { orderId:string; reference:string; ticketCodes:string[]; totalAmount:number; emailSent:boolean; emailStatus:string; downloadUrl:string; }
+export interface CreateManualOrderResponse { orderId:string; reference:string; ticketCodes:string[]; totalAmount:number; emailQueued:boolean; emailStatus:string; downloadUrl:string; }
 export interface AdminTicket { id:string; code:string; eventTitle:string; ticketType:string; buyerName:string; buyerEmail:string; status:string; isComplimentary:boolean; checkedInAt:string|null; createdAt:string; seatLabel:string|null; reference:string; }
 export interface ScanResult { admitted:boolean; decision:'admitted'|'rejected'|'already_used'|'invalid'; message:string; ticketId:string|null; ticketCode:string|null; guestName:string|null; eventTitle:string|null; ticketType:string|null; checkedInAt:string|null;seatLabel:string|null; }
 export interface CheckInSearchResult { ticketId:string; ticketCode:string; guestName:string; buyerPhone:string; eventTitle:string; ticketType:string; status:string; isComplimentary:boolean; checkedInAt:string|null;seatLabel:string|null; }
@@ -18,3 +18,5 @@ export interface OrganizationPaymentSettings {
   environmentFallbackAvailable:boolean;
 }
 export interface SaveOrganizationPaymentSettingsRequest { secretKey:string|null; useEnvironmentFallback:boolean; }
+export interface EmailDelivery { id:string;kind:string;recipientEmail:string;status:string;attemptCount:number;createdAt:string;sentAt:string|null;deliveredAt:string|null;failedAt:string|null;lastError:string|null;providerMessageId:string|null; }
+export interface EmailDeliveryPage { items:EmailDelivery[];total:number;page:number;pageSize:number; }
