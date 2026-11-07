@@ -26,6 +26,14 @@ export interface TicketSummary {
   ticketTypeName: string;
   qrCodeUrl: string;
   seatLabel: string | null;
+  holderName: string;
+  holderEmail: string;
+}
+
+export interface TicketTransfer {
+  id:string; ticketId:string; ticketCode:string; eventTitle:string; eventDate:string;
+  currentHolderName:string; recipientName:string; recipientEmail:string; status:string;
+  expiresAt:string; acceptedAt:string|null;
 }
 
 export interface VerifyPaymentResponse {

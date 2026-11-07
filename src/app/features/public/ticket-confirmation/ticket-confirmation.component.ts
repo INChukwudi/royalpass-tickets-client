@@ -1,16 +1,17 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { OrderService } from '../../../core/services/order.service';
-import { OrderSeatsResponse, SeatDto, VerifyPaymentResponse } from '../../../core/models/order.models';
+import { OrderSeatsResponse, SeatDto, TicketTransfer, VerifyPaymentResponse } from '../../../core/models/order.models';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-ticket-confirmation',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatProgressSpinnerModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatProgressSpinnerModule],
   templateUrl: './ticket-confirmation.component.html',
   styleUrl: './ticket-confirmation.component.scss'
 })
@@ -26,11 +27,16 @@ export class TicketConfirmationComponent implements OnInit {
   seats = signal<OrderSeatsResponse | null>(null);
   activeTicketId = signal<string | null>(null);
   savingSeats = signal(false);
+  transfers = signal<TicketTransfer[]>([]);
+  transferTicketId = signal<string|null>(null);
+  transferring = signal(false);
+  recipientName=''; recipientEmail=''; managementToken='';
   apiBase = environment.apiUrl.replace('/api', '');
 
   ngOnInit(): void {
     const ref = this.route.snapshot.queryParamMap.get('reference')
               ?? this.route.snapshot.paramMap.get('reference');
+    this.managementToken=this.route.snapshot.queryParamMap.get('token')??'';
 
     if (!ref) {
       this.error.set('No payment reference found.');
@@ -43,7 +49,7 @@ export class TicketConfirmationComponent implements OnInit {
         this.result.set(res);
         this.isSuccess.set(res.status === 'success');
         this.isLoading.set(false);
-        if (res.status === 'success') this.loadSeats(res);
+        if (res.status === 'success') { this.managementToken ||= res.seatAccessToken; this.loadSeats(res); this.loadTransfers(res.reference); }
       },
       error: err => {
         this.error.set(err?.error?.message ?? 'Could not verify your payment. Please contact support with your reference.');
@@ -51,6 +57,18 @@ export class TicketConfirmationComponent implements OnInit {
       }
     });
   }
+
+  startTransfer(ticketId:string):void { this.transferTicketId.set(ticketId);this.recipientName='';this.recipientEmail=''; }
+  submitTransfer():void {
+    const ticketId=this.transferTicketId();if(!ticketId||!this.recipientName.trim()||!this.recipientEmail.trim()){this.toast.warning('Enter the recipient name and email.');return;}
+    this.transferring.set(true);this.orderService.createTransfer(ticketId,this.managementToken,this.recipientName.trim(),this.recipientEmail.trim()).subscribe({
+      next:value=>{this.transfers.update(items=>[value,...items]);this.transferTicketId.set(null);this.transferring.set(false);this.toast.success('Transfer invitation queued. The ticket remains unchanged until the recipient accepts it.');},
+      error:error=>{this.transferring.set(false);this.toast.error(error?.error?.message??'Could not create the transfer invitation.');}
+    });
+  }
+  cancelTransfer(item:TicketTransfer):void { this.orderService.cancelTransfer(item.id,this.managementToken).subscribe({next:value=>{this.transfers.update(items=>items.map(x=>x.id===value.id?value:x));this.toast.success('Transfer cancelled.');},error:error=>this.toast.error(error?.error?.message??'Could not cancel transfer.')}); }
+  pendingTransfer(ticketId:string):TicketTransfer|undefined { return this.transfers().find(x=>x.ticketId===ticketId&&x.status==='Pending'); }
+  private loadTransfers(reference:string):void { if(!this.managementToken)return;this.orderService.listTransfers(reference,this.managementToken).subscribe({next:value=>this.transfers.set(value)}); }
 
   selectSeat(seat:SeatDto):void {
     const map=this.seats(); const ticketId=this.activeTicketId();

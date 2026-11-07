@@ -92,6 +92,7 @@
               <span>{{ ticket.ticketTypeName }}</span>
             </div>
             <div class="ticket-card__code">{{ ticket.ticketCode }}</div>
+            <div class="ticket-card__holder"><strong>Attendee:</strong> {{ticket.holderName}}<br><small>{{ticket.holderEmail}}</small></div>
             <div class="ticket-card__seat"><span class="material-icons">event_seat</span> Seat {{ ticket.seatLabel }}</div>
             <div class="ticket-card__qr">
               <img [src]="qrUrl(ticket.qrCodeUrl)" [alt]="ticket.ticketCode" loading="lazy">
@@ -100,6 +101,14 @@
             <button class="ticket-card__download" (click)="downloadTicket(ticket.ticketCode)">
               <span class="material-icons">download</span> Download PDF
             </button>
+            @if(pendingTransfer(ticket.ticketId);as pending){
+              <div class="transfer-state"><strong>Transfer pending</strong><span>Waiting for {{pending.recipientName}} to accept. The current QR remains valid.</span><button (click)="cancelTransfer(pending)">Cancel transfer</button></div>
+            }@else if(seats()?.canCustomerChange){
+              <button class="ticket-card__transfer" (click)="startTransfer(ticket.ticketId)"><span class="material-icons">person_add</span> Transfer ticket</button>
+            }@else{<small class="transfer-closed">Transfers closed with seat allocation.</small>}
+            @if(transferTicketId()===ticket.ticketId){
+              <div class="transfer-form"><h4>Transfer this ticket at no cost</h4><p>The recipient must accept by the seat-allocation deadline. You remain the booking owner.</p><input [(ngModel)]="recipientName" placeholder="Recipient full name"><input [(ngModel)]="recipientEmail" type="email" placeholder="Recipient email"><div><button (click)="submitTransfer()" [disabled]="transferring()">{{transferring()?'Queuing…':'Send invitation'}}</button><button (click)="transferTicketId.set(null)" [disabled]="transferring()">Close</button></div></div>
+            }
           </div>
         }
       </div>

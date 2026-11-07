@@ -7,7 +7,7 @@ import {
   InitiateOrderResponse,
   VerifyPaymentRequest,
   VerifyPaymentResponse,
-  OrderLookupDto, OrderSeatsResponse
+  OrderLookupDto, OrderSeatsResponse, TicketTransfer
 } from '../models/order.models';
 import { ApiResponse } from '../models/api-response.model';
 
@@ -53,6 +53,26 @@ export class OrderService {
       `${this.base}/orders/${encodeURIComponent(reference)}/resend`,
       {}
     );
+  }
+
+  listTransfers(reference:string,token:string):Observable<TicketTransfer[]> {
+    return this.http.get<TicketTransfer[]>(`${this.base}/orders/${encodeURIComponent(reference)}/transfers`,{params:{token}});
+  }
+
+  createTransfer(ticketId:string,managementToken:string,recipientName:string,recipientEmail:string):Observable<TicketTransfer> {
+    return this.http.post<TicketTransfer>(`${this.base}/tickets/${encodeURIComponent(ticketId)}/transfers`,{managementToken,recipientName,recipientEmail});
+  }
+
+  cancelTransfer(id:string,managementToken:string):Observable<TicketTransfer> {
+    return this.http.post<TicketTransfer>(`${this.base}/ticket-transfers/${encodeURIComponent(id)}/cancel`,{managementToken});
+  }
+
+  getTransfer(token:string):Observable<TicketTransfer> {
+    return this.http.get<TicketTransfer>(`${this.base}/ticket-transfers/${encodeURIComponent(token)}`);
+  }
+
+  acceptTransfer(token:string,recipientEmail:string):Observable<TicketTransfer> {
+    return this.http.post<TicketTransfer>(`${this.base}/ticket-transfers/${encodeURIComponent(token)}/accept`,{recipientEmail});
   }
 
   saveDownload(content: Blob, fileName: string): void {

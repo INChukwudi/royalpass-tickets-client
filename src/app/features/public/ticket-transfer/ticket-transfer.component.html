@@ -1,0 +1,21 @@
+<main class="transfer-page">
+  <section class="transfer-card">
+    <div class="brand"><span class="material-icons">confirmation_number</span> RoyalPass</div>
+    @if(loading()){<mat-spinner diameter="44"></mat-spinner><p>Loading transfer invitation…</p>}
+    @else if(transfer();as item){
+      @if(item.status==='Pending'){
+        <p class="eyebrow">Ticket transfer invitation</p><h1>{{item.eventTitle}}</h1>
+        <p><strong>{{item.currentHolderName}}</strong> has offered ticket <strong>{{item.ticketCode}}</strong> to <strong>{{item.recipientName}}</strong> at no cost.</p>
+        <div class="notice"><strong>This transfer is not complete yet.</strong> Accepting it changes the attendee details and replaces the previous QR code. The purchaser remains the booking owner.</div>
+        <p>Accept before <strong>{{item.expiresAt|date:'medium'}}</strong>, when seat allocation and transfers close.</p>
+        <label>Recipient email<input type="email" [(ngModel)]="recipientEmail" placeholder="Email that received this invitation"></label>
+        @if(error()){<p class="error">{{error()}}</p>}
+        <button (click)="accept()" [disabled]="accepting()">{{accepting()?'Accepting…':'Accept ticket'}}</button>
+      }@else if(item.status==='Accepted'){
+        <span class="material-icons success">check_circle</span><h1>Transfer accepted</h1>
+        <p>{{item.ticketCode}} now carries the attendee details for <strong>{{item.recipientName}}</strong>. A new ticket has been queued for email delivery.</p>
+      }@else{<h1>Transfer {{item.status|lowercase}}</h1><p>This invitation is no longer available.</p>}
+    }@else{<h1>Invitation unavailable</h1><p>{{error()}}</p>}
+    <a routerLink="/">Back to events</a>
+  </section>
+</main>

@@ -3,6 +3,8 @@
   background: var(--surface);
 }
 
+.ticket-card__holder{margin:.65rem 0;color:#374151;line-height:1.35}.ticket-card__holder small{color:#6b7280}.ticket-card__transfer{width:100%;margin-top:.65rem;display:flex;justify-content:center;align-items:center;gap:.4rem;border:1px solid #c9a84c;background:#fff;padding:.65rem;border-radius:7px;font-weight:700;cursor:pointer}.transfer-state,.transfer-form{margin-top:.75rem;padding:.75rem;border-radius:8px;background:#fff8df;display:grid;gap:.5rem;text-align:left}.transfer-state span,.transfer-form p{font-size:.82rem;margin:0}.transfer-state button,.transfer-form button{border:0;background:#c9a84c;padding:.55rem .75rem;border-radius:6px;font-weight:700;cursor:pointer}.transfer-form input{width:100%;padding:.65rem;border:1px solid #d1d5db;border-radius:6px}.transfer-form div{display:flex;gap:.5rem}.transfer-closed{display:block;margin-top:.7rem;color:#6b7280}
+
 .confirmation-topbar {
   background: var(--deep);
   padding: 16px 24px;
