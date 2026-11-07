@@ -15,8 +15,8 @@
       <h2>{{ created.ticketCodes.length }} ticket{{ created.ticketCodes.length === 1 ? '' : 's' }} issued</h2>
       <p class="reference">Reference <strong>{{ created.reference }}</strong></p>
 
-      <div class="delivery" [class.delivery--warning]="!created.emailSent">
-        <span class="material-icons">{{ created.emailSent ? 'mark_email_read' : 'warning_amber' }}</span>
+      <div class="delivery" [class.delivery--warning]="!created.emailQueued">
+        <span class="material-icons">{{ created.emailQueued ? 'schedule_send' : 'warning_amber' }}</span>
         <span>{{ created.emailStatus }}</span>
       </div>
 
@@ -91,7 +91,7 @@
           <label class="email-option">
             <input type="checkbox" formControlName="assignSeats">
             <span class="material-icons">event_seat</span>
-            <span><strong>Assign seats automatically</strong><small>Choose adjacent seats now. Turn this off to allocate them later from the booking.</small></span>
+            <span><strong>Assign seats automatically</strong><small>Optional. Leave unchecked so the buyer can choose seats from their booking link.</small></span>
           </label>
           <div class="notice"><span class="material-icons">verified_user</span><p>This creates a paid order and active tickets. It immediately counts toward capacity, sales reports, and gate validation.</p></div>
           <button class="btn-gold submit-btn" type="submit" [disabled]="saving()">

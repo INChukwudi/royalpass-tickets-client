@@ -42,7 +42,7 @@ export class ManualOrderComponent implements OnInit {
     purchasedAt: [this.localDateTime(), Validators.required],
     notes: [''],
     sendEmail: [true],
-    assignSeats: [true]
+    assignSeats: [false]
   });
 
   ngOnInit(): void {
@@ -107,8 +107,8 @@ export class ManualOrderComponent implements OnInit {
       next: response => {
         this.result.set(response);
         this.saving.set(false);
-        response.emailSent
-          ? this.toast.success('Manual sale recorded and tickets emailed.')
+        response.emailQueued
+          ? this.toast.success('Manual sale recorded and ticket email queued.')
           : this.toast.warning(response.emailStatus, 8000);
       },
       error: error => {
@@ -123,7 +123,7 @@ export class ManualOrderComponent implements OnInit {
     this.form.reset({
       eventId: '', ticketTypeId: '', buyerName: '', buyerEmail: '', buyerPhone: '', quantity: 1,
       amountPaid: 0, paymentMethod: 'Cash', externalReference: '', purchasedAt: this.localDateTime(),
-      notes: '', sendEmail: true, assignSeats: true
+      notes: '', sendEmail: true, assignSeats: false
     });
     this.selectedEvent.set(null);
   }
