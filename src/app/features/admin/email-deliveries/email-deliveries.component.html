@@ -28,15 +28,15 @@
         <tbody>
           @for (item of items(); track item.id) {
             <tr>
-              <td>{{ item.createdAt | date:'short' }}</td>
+              <td>{{ item.createdAt | date:'MMM. d, y, h:mm a' }}</td>
               <td>{{ item.kind }}</td>
               <td>{{ item.recipientEmail }}</td>
               <td>
                 <span class="status" [attr.data-status]="item.status.toLowerCase()">{{ item.status }}</span>
                 @if (item.lastError) { <small>{{ item.lastError }}</small> }
               </td>
-              <td>{{ item.attemptCount }}</td>
-              <td>{{ (item.complainedAt || item.deliveredAt || item.failedAt || item.sentAt) | date:'short' }}</td>
+              <td>{{ item.attemptCount | number:'1.0-0' }}</td>
+              <td>{{ (item.complainedAt || item.deliveredAt || item.failedAt || item.sentAt) | date:'MMM. d, y, h:mm a' }}</td>
               <td>@if (item.status === 'Failed') { <button (click)="retry(item)">Retry</button> }</td>
             </tr>
           } @empty {

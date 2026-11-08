@@ -25,7 +25,7 @@
         <div class="current-key">
           <span>Current key</span>
           <strong>{{ current.maskedKey }}</strong>
-          @if (current.updatedAt) { <small>Updated {{ current.updatedAt | date:'medium' }}</small> }
+          @if (current.updatedAt) { <small>Updated {{ current.updatedAt | date:'MMM. d, y, h:mm a' }}</small> }
         </div>
       } @else {
         <div class="fallback-note" [class.fallback-note--warning]="!current.environmentFallbackAvailable">

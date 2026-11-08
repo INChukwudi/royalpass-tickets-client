@@ -33,7 +33,7 @@
     </button>
     <button class="ef-tab" [class.active]="activeTab() === 'tickets'" (click)="activeTab.set('tickets')">
       <span class="material-icons">confirmation_number</span> Ticket Types
-      <span class="ef-tab__count">{{ ticketTypes.length }}</span>
+      <span class="ef-tab__count">{{ ticketTypes.length | number:'1.0-0' }}</span>
     </button>
   </div>
 }
@@ -179,7 +179,7 @@
         @for (ctrl of ticketTypes.controls; track $index; let i = $index) {
           <div class="ef-tt-card" [formGroupName]="i">
             <div class="ef-tt-card__header">
-              <span class="ef-tt-card__index">#{{ i + 1 }}</span>
+              <span class="ef-tt-card__index">#{{ i + 1 | number:'1.0-0' }}</span>
               <input formControlName="name" class="ef-tt-name-input" placeholder="e.g. General Admission">
               <button class="ef-tt-delete" (click)="deleteTicketType(i)" [disabled]="deletingTicketId() === ctrl.value.id" title="Remove">
                 @if (deletingTicketId() === ctrl.value.id) {

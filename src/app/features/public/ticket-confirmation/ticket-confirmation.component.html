@@ -86,7 +86,7 @@
             <div class="stage">STAGE</div>
           </div>
           </div>
-          @if(!seatMap.canCustomerChange){<p class="seat-closed">Online changes closed {{seatMap.seatSelectionClosesAt|date:'medium'}}. The event team can still assist you.</p>}
+          @if(!seatMap.canCustomerChange){<p class="seat-closed">Online changes closed {{seatMap.seatSelectionClosesAt|date:'MMM. d, y, h:mm a'}}. The event team can still assist you.</p>}
           <details class="accessible-seats"><summary>Use accessible seat list</summary>@for(ticket of seatMap.tickets;track ticket.id){<label>{{ticket.code}}<select [value]="ticket.seatId" (change)="chooseSeat(ticket.id,$any($event.target).value)" [disabled]="!seatMap.canCustomerChange"><option value="">Choose a seat</option>@for(seat of seatMap.seats;track seat.id){@if(seat.state==='available'||seat.ticketId===ticket.id){<option [value]="seat.id">{{seat.label}} · {{seat.band}}</option>}}</select></label>}</details>
           <div class="seat-legend"><span><i class="available"></i>Available</span><span><i class="selected"></i>Your seats</span><span><i class="unavailable"></i>Unavailable</span></div>
         </section>

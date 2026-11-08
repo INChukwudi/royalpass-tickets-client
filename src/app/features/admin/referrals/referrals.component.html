@@ -9,8 +9,8 @@
 
   @if (report(); as data) {
     <div class="metrics">
-      <article><span>Attributed revenue</span><strong>{{ data.totals.attributedRevenue | currency:'NGN':'₦' }}</strong><small>{{ data.totals.attributedOrders }} paid orders · {{ data.totals.attributedTickets }} tickets</small></article>
-      <article><span>Unattributed revenue</span><strong>{{ data.totals.unattributedRevenue | currency:'NGN':'₦' }}</strong><small>{{ data.totals.unattributedOrders }} paid orders · {{ data.totals.unattributedTickets }} tickets</small></article>
+      <article><span>Attributed revenue</span><strong>{{ data.totals.attributedRevenue | currency:'NGN':'₦':'1.0-0' }}</strong><small>{{ data.totals.attributedOrders | number:'1.0-0' }} paid orders · {{ data.totals.attributedTickets | number:'1.0-0' }} tickets</small></article>
+      <article><span>Unattributed revenue</span><strong>{{ data.totals.unattributedRevenue | currency:'NGN':'₦':'1.0-0' }}</strong><small>{{ data.totals.unattributedOrders | number:'1.0-0' }} paid orders · {{ data.totals.unattributedTickets | number:'1.0-0' }} tickets</small></article>
       <article><span>Attribution rate</span><strong>{{ data.totals.paidOrders ? (data.totals.attributedOrders / data.totals.paidOrders | percent:'1.0-1') : '—' }}</strong><small>Share of paid orders with a code</small></article>
     </div>
 
@@ -23,16 +23,16 @@
     }
 
     <section class="table-card">
-      <div class="table-heading"><div><h2>Code usage</h2><p>Only successful paid orders contribute to these totals.</p></div><span>{{ data.items.length }} codes</span></div>
+      <div class="table-heading"><div><h2>Code usage</h2><p>Only successful paid orders contribute to these totals.</p></div><span>{{ data.items.length | number:'1.0-0' }} codes</span></div>
       @if (loading()) { <p class="state">Refreshing…</p> } @else {
         <div class="table-wrap"><table><thead><tr><th>Code</th><th>Owner / label</th><th>Status</th><th>Orders</th><th>Tickets</th><th>Revenue</th><th>Channel</th><th>Last used</th><th></th></tr></thead><tbody>
           @for (item of data.items; track item.referralCodeId) {
             <tr>
               <td><strong class="code">{{ item.code }}</strong></td><td>{{ item.label || '—' }}</td>
               <td><span class="status" [class.inactive]="!item.isActive">{{ item.isActive ? 'Active' : 'Inactive' }}</span></td>
-              <td>{{ item.orders }}</td><td>{{ item.tickets }}</td><td>{{ item.revenue | currency:'NGN':'₦' }}</td>
-              <td><small>{{ item.onlineOrders }} online<br>{{ item.manualOrders }} manual</small></td>
-              <td>{{ item.lastUsedAt ? (item.lastUsedAt | date:'mediumDate') : 'Never' }}</td>
+              <td>{{ item.orders | number:'1.0-0' }}</td><td>{{ item.tickets | number:'1.0-0' }}</td><td>{{ item.revenue | currency:'NGN':'₦':'1.0-0' }}</td>
+              <td><small>{{ item.onlineOrders | number:'1.0-0' }} online<br>{{ item.manualOrders | number:'1.0-0' }} manual</small></td>
+              <td>{{ item.lastUsedAt ? (item.lastUsedAt | date:'MMM. d, y') : 'Never' }}</td>
               <td>@if (canManage) {<button class="toggle" type="button" (click)="toggle(item.referralCodeId, !item.isActive)" [disabled]="toggling() === item.referralCodeId">{{ item.isActive ? 'Disable' : 'Enable' }}</button>}</td>
             </tr>
           } @empty {<tr><td colspan="9" class="state">No referral codes yet. Import the organization’s list to get started.</td></tr>}

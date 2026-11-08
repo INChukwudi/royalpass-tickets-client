@@ -21,11 +21,11 @@
       </div>
       <div class="stat-card__body">
         <span class="stat-card__label">{{ stat.label }}</span>
-        <span class="stat-card__value">{{ stat.value }}</span>
+        <span class="stat-card__value">{{ stat.currency ? (stat.value | currency:'NGN':'₦':'1.0-0') : (stat.value | number:'1.0-0') }}</span>
       </div>
       <div class="stat-card__trend" [class.up]="stat.trend > 0" [class.neutral]="stat.trend === 0">
         <span class="material-icons">{{ stat.trend > 0 ? "trending_up" : "trending_flat" }}</span>
-        {{ stat.trend > 0 ? "+" : "" }}{{ stat.trend }}%
+        {{ stat.trend > 0 ? "+" : "" }}{{ stat.trend | number:'1.0-1' }}%
       </div>
     </div>
   }
@@ -45,4 +45,4 @@
   }
 </div>
 
-@if(data();as d){<div class="phase-notice"><div style="width:100%"><strong>Sales by ticket type</strong><canvas baseChart [data]="chartData()" [type]="'bar'"></canvas><p>No-shows: {{d.noShows}}</p><h3>Recent purchases</h3>@for(o of d.recentPurchases;track o.reference){<p>{{o.buyer}} · {{o.event}} · ₦{{o.amount}}</p>}@empty{<p>No purchases yet.</p>}<h3>Recent check-ins</h3>@for(c of d.recentCheckIns;track c.ticketCode){<p>{{c.guest}} · {{c.event}} · {{c.checkedInAt|date:'short'}}</p>}@empty{<p>No check-ins yet.</p>}</div></div>}
+@if(data();as d){<div class="phase-notice"><div style="width:100%"><strong>Sales by ticket type</strong><canvas baseChart [data]="chartData()" [type]="'bar'"></canvas><p>No-shows: {{d.noShows | number:'1.0-0'}}</p><h3>Recent purchases</h3>@for(o of d.recentPurchases;track o.reference){<p>{{o.buyer}} · {{o.event}} · {{o.amount | currency:'NGN':'₦':'1.0-0'}}</p>}@empty{<p>No purchases yet.</p>}<h3>Recent check-ins</h3>@for(c of d.recentCheckIns;track c.ticketCode){<p>{{c.guest}} · {{c.event}} · {{c.checkedInAt|date:'MMM. d, y, h:mm a'}}</p>}@empty{<p>No check-ins yet.</p>}</div></div>}

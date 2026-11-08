@@ -13,7 +13,7 @@
             <div class="identity"><h2>{{ user.fullName }}</h2><p>{{ user.email }}</p></div>
             <span class="status" [class.status--inactive]="!user.isActive">{{ user.isActive ? 'Active' : 'Disabled' }}</span>
           </div>
-          <div class="meta"><span>{{ user.role === 'SuperAdmin' ? 'Primary administrator' : 'Custom administrator' }}</span><span>Created {{ user.createdAt | date:'mediumDate' }}</span></div>
+          <div class="meta"><span>{{ user.role === 'SuperAdmin' ? 'Primary administrator' : 'Custom administrator' }}</span><span>Created {{ user.createdAt | date:'MMM. d, y' }}</span></div>
           <div class="permission-chips">
             @if (user.role === 'SuperAdmin') { <span>All operations</span> }
             @else { @for (permission of user.permissions; track permission) { <span>{{ permissionName(permission) }}</span> } }

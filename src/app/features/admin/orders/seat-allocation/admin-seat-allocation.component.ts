@@ -5,8 +5,9 @@ import {OrderSeatsResponse,SeatDto} from '../../../../core/models/order.models';
 import {ToastService} from '../../../../core/services/toast.service';
 import {MatIconModule} from '@angular/material/icon';
 import {MatMenuModule} from '@angular/material/menu';
+import {DatePipe, DecimalPipe} from '@angular/common';
 
-@Component({selector:'app-admin-seat-allocation',standalone:true,imports:[RouterLink,MatIconModule,MatMenuModule],templateUrl:'./admin-seat-allocation.component.html',styleUrl:'./admin-seat-allocation.component.scss'})
+@Component({selector:'app-admin-seat-allocation',standalone:true,imports:[RouterLink,MatIconModule,MatMenuModule,DatePipe,DecimalPipe],templateUrl:'./admin-seat-allocation.component.html',styleUrl:'./admin-seat-allocation.component.scss'})
 export class AdminSeatAllocationComponent implements OnInit{
  private readonly route=inject(ActivatedRoute);private readonly admin=inject(AdminService);private readonly toast=inject(ToastService);
  readonly map=signal<OrderSeatsResponse|null>(null);readonly active=signal<string|null>(null);readonly saving=signal(false);reference='';

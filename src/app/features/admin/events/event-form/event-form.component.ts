@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, AbstractControl } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,7 +13,7 @@ import { EventDetailDto, TicketTypeDto } from '../../../../core/models/event.mod
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [RouterLink, ReactiveFormsModule, DecimalPipe, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
 })

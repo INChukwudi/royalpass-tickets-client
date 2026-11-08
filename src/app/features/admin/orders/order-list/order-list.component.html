@@ -17,14 +17,14 @@
         @for (o of items(); track o.id) {
           <tr>
             <td>{{ o.reference }}</td><td>{{ o.eventTitle }}<small>{{ o.ticketType }}</small></td>
-            <td>{{ o.buyerName }}<small>{{ o.buyerEmail }}</small></td><td>{{ o.quantity }}</td>
-            <td>{{ o.totalAmount | currency:'NGN':'₦' }}</td><td>{{ o.referralCode || '—' }}</td>
+            <td>{{ o.buyerName }}<small>{{ o.buyerEmail }}</small></td><td>{{ o.quantity | number:'1.0-0' }}</td>
+            <td>{{ o.totalAmount | currency:'NGN':'₦':'1.0-0' }}</td><td>{{ o.referralCode || '—' }}</td>
             <td><span class="source" [class.source--manual]="o.source === 'Manual'">{{ o.source }}</span><small>{{ o.paymentMethod }}</small></td>
-            <td><span class="status">{{ o.paymentStatus }}</span></td><td>{{ o.createdAt | date:'medium' }}</td>
+            <td><span class="status">{{ o.paymentStatus }}</span></td><td>{{ o.createdAt | date:'MMM. d, y, h:mm a' }}</td>
           </tr>
         } @empty { <tr><td colspan="9">No orders found.</td></tr> }
       </tbody>
     </table></div>
-    <div class="pager"><button (click)="move(-1)" [disabled]="page === 1">Previous</button><span>Page {{ page }} of {{ lastPage }} · {{ total() }} orders</span><button (click)="move(1)" [disabled]="page === lastPage">Next</button></div>
+    <div class="pager"><button (click)="move(-1)" [disabled]="page === 1">Previous</button><span>Page {{ page | number:'1.0-0' }} of {{ lastPage | number:'1.0-0' }} · {{ total() | number:'1.0-0' }} orders</span><button (click)="move(1)" [disabled]="page === lastPage">Next</button></div>
   }
 </div>

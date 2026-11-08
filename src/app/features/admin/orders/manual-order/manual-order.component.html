@@ -12,7 +12,7 @@
     <section class="success-card">
       <div class="success-icon"><span class="material-icons">check_circle</span></div>
       <p class="eyebrow">Manual sale complete</p>
-      <h2>{{ created.ticketCodes.length }} ticket{{ created.ticketCodes.length === 1 ? '' : 's' }} issued</h2>
+      <h2>{{ created.ticketCodes.length | number:'1.0-0' }} ticket{{ created.ticketCodes.length === 1 ? '' : 's' }} issued</h2>
       <p class="reference">Reference <strong>{{ created.reference }}</strong></p>
 
       <div class="delivery" [class.delivery--warning]="!created.emailQueued">
@@ -41,13 +41,13 @@
               <label class="field full"><span>Event *</span>
                 <select formControlName="eventId" (change)="onEventChange()">
                   <option value="">{{ loadingEvents() ? 'Loading events…' : 'Select an event' }}</option>
-                  @for (event of events(); track event.id) { <option [value]="event.id">{{ event.title }} — {{ event.eventDate | date:'mediumDate' }}</option> }
+                  @for (event of events(); track event.id) { <option [value]="event.id">{{ event.title }} — {{ event.eventDate | date:'MMM. d, y' }}</option> }
                 </select>
               </label>
               <label class="field"><span>Ticket type *</span>
                 <select formControlName="ticketTypeId" (change)="updateSuggestedAmount()" [disabled]="!selectedEvent() || loadingTicketTypes()">
                   <option value="">{{ loadingTicketTypes() ? 'Loading…' : 'Select ticket type' }}</option>
-                  @for (type of ticketTypes; track type.id) { <option [value]="type.id">{{ type.name }} — {{ type.price | currency:'NGN':'₦' }}</option> }
+                  @for (type of ticketTypes; track type.id) { <option [value]="type.id">{{ type.name }} — {{ type.price | currency:'NGN':'₦':'1.0-0' }}</option> }
                 </select>
               </label>
               <label class="field"><span>Quantity *</span><input type="number" min="1" max="100" formControlName="quantity" (input)="updateSuggestedAmount()"></label>
@@ -81,8 +81,8 @@
           <h2>{{ selectedEvent()?.title || 'Choose an event' }}</h2>
           <dl>
             <div><dt>Ticket</dt><dd>{{ selectedTicketType?.name || '—' }}</dd></div>
-            <div><dt>Quantity</dt><dd>{{ form.controls.quantity.value }}</dd></div>
-            <div><dt>Recorded total</dt><dd>{{ form.controls.amountPaid.value | currency:'NGN':'₦' }}</dd></div>
+            <div><dt>Quantity</dt><dd>{{ form.controls.quantity.value | number:'1.0-0' }}</dd></div>
+            <div><dt>Recorded total</dt><dd>{{ form.controls.amountPaid.value | currency:'NGN':'₦':'1.0-0' }}</dd></div>
           </dl>
           <label class="email-option">
             <input type="checkbox" formControlName="sendEmail">

@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
-import { DatePipe } from "@angular/common";
+import { CurrencyPipe, DatePipe, DecimalPipe } from "@angular/common";
 import { AuthService } from "../../../core/services/auth.service";
 import { AdminService } from '../../../core/services/admin.service';
 import { DashboardData } from '../../../core/models/admin.models';
@@ -10,7 +10,7 @@ import { ChartConfiguration } from 'chart.js';
 @Component({
   selector: "app-dashboard",
   standalone: true,
-  imports: [RouterLink, DatePipe, BaseChartDirective],
+  imports: [RouterLink, CurrencyPipe, DatePipe, DecimalPipe, BaseChartDirective],
   templateUrl: "./dashboard.component.html",
   styleUrl: "./dashboard.component.scss"
 })
@@ -34,12 +34,12 @@ export class DashboardComponent implements OnInit {
   });
 
   readonly stats=computed(()=>{const d=this.data();return [
-    {label:'Total Revenue',value:`₦${(d?.revenue??0).toLocaleString()}`,icon:'payments',color:'#16a34a',bg:'rgba(22,163,74,.1)',trend:0},
-    {label:'Tickets Sold',value:String(d?.ticketsSold??0),icon:'confirmation_number',color:'#6366f1',bg:'rgba(99,102,241,.1)',trend:0},
-    {label:'Checked In',value:String(d?.checkedIn??0),icon:'how_to_reg',color:'#0891b2',bg:'rgba(8,145,178,.1)',trend:0},
-    {label:'Seats Assigned',value:String(d?.seatsAssigned??0),icon:'event_seat',color:'#16a34a',bg:'rgba(22,163,74,.1)',trend:0},
-    {label:'Awaiting Seat',value:String(d?.awaitingSeat??0),icon:'pending_actions',color:'#dc2626',bg:'rgba(220,38,38,.1)',trend:0},
-    {label:'Seats Available',value:String(d?.seatsAvailable??0),icon:'chair',color:'#d97706',bg:'rgba(217,119,6,.1)',trend:0}]});
+    {label:'Total Revenue',value:d?.revenue??0,currency:true,icon:'payments',color:'#16a34a',bg:'rgba(22,163,74,.1)',trend:0},
+    {label:'Tickets Sold',value:d?.ticketsSold??0,currency:false,icon:'confirmation_number',color:'#6366f1',bg:'rgba(99,102,241,.1)',trend:0},
+    {label:'Checked In',value:d?.checkedIn??0,currency:false,icon:'how_to_reg',color:'#0891b2',bg:'rgba(8,145,178,.1)',trend:0},
+    {label:'Seats Assigned',value:d?.seatsAssigned??0,currency:false,icon:'event_seat',color:'#16a34a',bg:'rgba(22,163,74,.1)',trend:0},
+    {label:'Awaiting Seat',value:d?.awaitingSeat??0,currency:false,icon:'pending_actions',color:'#dc2626',bg:'rgba(220,38,38,.1)',trend:0},
+    {label:'Seats Available',value:d?.seatsAvailable??0,currency:false,icon:'chair',color:'#d97706',bg:'rgba(217,119,6,.1)',trend:0}]});
   readonly chartData=computed<ChartConfiguration<'bar'>['data']>(()=>({labels:this.data()?.salesByTicketType.map(x=>x.name)??[],datasets:[{data:this.data()?.salesByTicketType.map(x=>x.sold)??[],label:'Tickets sold',backgroundColor:'#c9a84c'}]}));
   ngOnInit(){this.adminService.dashboard().subscribe(d=>this.data.set(d));}
 

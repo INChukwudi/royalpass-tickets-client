@@ -7,7 +7,7 @@
         <p class="eyebrow">Ticket transfer invitation</p><h1>{{item.eventTitle}}</h1>
         <p><strong>{{item.currentHolderName}}</strong> has offered ticket <strong>{{item.ticketCode}}</strong> to <strong>{{item.recipientName}}</strong> at no cost.</p>
         <div class="notice"><strong>This transfer is not complete yet.</strong> Accepting it changes the attendee details and replaces the previous QR code. The purchaser remains the booking owner.</div>
-        <p>Accept before <strong>{{item.expiresAt|date:'medium'}}</strong>, when seat allocation and transfers close.</p>
+        <p>Accept before <strong>{{item.expiresAt|date:'MMM. d, y, h:mm a'}}</strong>, when seat allocation and transfers close.</p>
         <label>Recipient email<input type="email" [(ngModel)]="recipientEmail" placeholder="Email that received this invitation"></label>
         @if(error()){<p class="error">{{error()}}</p>}
         <button (click)="accept()" [disabled]="accepting()">{{accepting()?'Accepting…':'Accept ticket'}}</button>
