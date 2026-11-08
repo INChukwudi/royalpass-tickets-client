@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, permissionGuard } from './core/guards/auth.guard';
+import { anyPermissionGuard, authGuard, guestGuard, permissionGuard } from './core/guards/auth.guard';
 import { ADMIN_PERMISSIONS } from './core/models/auth.models';
 
 export const routes: Routes = [
@@ -114,7 +114,7 @@ export const routes: Routes = [
       },
       {
         path: 'referrals',
-        canActivate: [permissionGuard(ADMIN_PERMISSIONS.viewReports)],
+        canActivate: [anyPermissionGuard(ADMIN_PERMISSIONS.viewReports, ADMIN_PERMISSIONS.manageOrganization)],
         loadComponent: () =>
           import('./features/admin/referrals/referrals.component').then(m => m.ReferralsComponent)
       },

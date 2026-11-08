@@ -119,7 +119,9 @@ export class TicketConfirmationComponent implements OnInit {
   }
 
   downloadTicket(code: string): void {
-    this.orderService.downloadTicketPdf(code).subscribe({
+    const ticket = this.result()?.tickets.find(item => item.ticketCode === code);
+    if (!ticket) return;
+    this.orderService.downloadTicketPdf(ticket.downloadUrl).subscribe({
       next: pdf => this.orderService.saveDownload(pdf, `${code}.pdf`),
       error: () => this.toast.error('Could not download this ticket.')
     });
@@ -128,7 +130,7 @@ export class TicketConfirmationComponent implements OnInit {
   downloadOrder(): void {
     const reference = this.result()?.reference;
     if (!reference) return;
-    this.orderService.downloadOrderPdf(reference).subscribe({
+    this.orderService.downloadOrderPdf(reference, this.result()!.seatAccessToken).subscribe({
       next: pdf => this.orderService.saveDownload(pdf, `RoyalPass-${reference}.pdf`),
       error: () => this.toast.error('Could not download your tickets.')
     });

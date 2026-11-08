@@ -28,6 +28,15 @@
       </div>
     }
 
+    @else if (result()?.status === 'refund_required') {
+      <div class="conf-card conf-card--failed">
+        <div class="conf-icon conf-icon--failed"><span class="material-icons">support_agent</span></div>
+        <h1>Payment Needs Review</h1>
+        <p>Your payment was received after the available ticket allocation had been exhausted. No tickets were issued, and the event team has been alerted to arrange your refund.</p>
+        <p class="conf-ref">Reference: <strong>{{ result()?.reference }}</strong></p>
+      </div>
+    }
+
     <!-- Failed payment -->
     @else if (!isSuccess()) {
       <div class="conf-card conf-card--failed">

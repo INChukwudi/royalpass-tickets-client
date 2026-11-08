@@ -27,14 +27,10 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
   expiresAt: string;
   user: User;
 }
 
 export interface RefreshTokenResponse {
-  accessToken: string;
-  refreshToken: string;
   expiresAt: string;
 }

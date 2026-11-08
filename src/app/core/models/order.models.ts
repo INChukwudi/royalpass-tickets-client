@@ -5,7 +5,6 @@ export interface InitiateOrderRequest {
   buyerName: string;
   buyerEmail: string;
   buyerPhone: string;
-  callbackUrl: string;
   referralCode?: string | null;
 }
 
@@ -26,6 +25,7 @@ export interface TicketSummary {
   ticketCode: string;
   ticketTypeName: string;
   qrCodeUrl: string;
+  downloadUrl: string;
   seatLabel: string | null;
   holderName: string;
   holderEmail: string;
@@ -66,11 +66,8 @@ export interface OrderLookupDto {
   eventTitle: string;
   eventVenue: string;
   eventDate: string;
-  buyerName: string;
-  buyerEmail: string;
   quantity: number;
   totalAmount: number;
   paymentStatus: string;
   paidAt: string | null;
-  tickets: OrderTicketDto[];
 }

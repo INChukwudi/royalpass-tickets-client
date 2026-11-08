@@ -1,12 +1,10 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap, catchError, throwError } from 'rxjs';
+import { tap, catchError, throwError, finalize } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse, User } from '../models/auth.models';
 
-const ACCESS_TOKEN_KEY = 'ct_access_token';
-const REFRESH_TOKEN_KEY = 'ct_refresh_token';
 const USER_KEY = 'ct_user';
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +23,6 @@ export class AuthService {
     this._isLoading.set(true);
     return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, request).pipe(
       tap(response => {
-        this.storeTokens(response.accessToken, response.refreshToken);
         this.storeUser(response.user);
         this._currentUser.set(response.user);
         this._isLoading.set(false);
@@ -38,24 +35,15 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    this.http.post<void>(`${environment.apiUrl}/auth/logout`, {}).pipe(
+      finalize(() => this.clearSession())
+    ).subscribe();
+  }
+
+  clearSession() {
     localStorage.removeItem(USER_KEY);
     this._currentUser.set(null);
     this.router.navigate(['/admin/login']);
-  }
-
-  getAccessToken(): string | null {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
-  }
-
-  storeTokens(accessToken: string, refreshToken: string) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   }
 
   storeUser(user: User) {
@@ -86,6 +74,8 @@ export class AuthService {
 
   private loadUser(): User | null {
     try {
+      localStorage.removeItem('ct_access_token');
+      localStorage.removeItem('ct_refresh_token');
       const raw = localStorage.getItem(USER_KEY);
       return raw ? JSON.parse(raw) : null;
     } catch {

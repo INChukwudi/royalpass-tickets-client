@@ -29,6 +29,7 @@ export class ReferralsComponent implements OnInit {
   readonly saving = signal(false);
   readonly toggling = signal<string | null>(null);
   readonly canManage = this.auth.hasPermission(ADMIN_PERMISSIONS.manageOrganization);
+  readonly canExport = this.auth.hasPermission(ADMIN_PERMISSIONS.viewReports);
   selectedEventId = '';
   importText = '';
 

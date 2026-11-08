@@ -10,7 +10,7 @@ interface NavItem {
   label: string;
   icon: string;
   route: string;
-  permission: string;
+  permission: string | string[];
 }
 
 @Component({
@@ -38,14 +38,15 @@ export class AdminLayoutComponent {
     { label: 'Tickets',      icon: 'confirmation_number',route: '/admin/tickets', permission: ADMIN_PERMISSIONS.viewTickets },
     { label: 'Gate Scanner', icon: 'qr_code_scanner',    route: '/admin/scanner', permission: ADMIN_PERMISSIONS.checkInTickets },
     { label: 'Reports',      icon: 'bar_chart',          route: '/admin/reports', permission: ADMIN_PERMISSIONS.viewReports },
-    { label: 'Referrals',    icon: 'group_add',          route: '/admin/referrals', permission: ADMIN_PERMISSIONS.viewReports },
+    { label: 'Referrals',    icon: 'group_add',          route: '/admin/referrals', permission: [ADMIN_PERMISSIONS.viewReports, ADMIN_PERMISSIONS.manageOrganization] },
     { label: 'Users',        icon: 'manage_accounts',    route: '/admin/users', permission: ADMIN_PERMISSIONS.manageUsers },
     { label: 'Organization', icon: 'business',           route: '/admin/organization', permission: ADMIN_PERMISSIONS.manageOrganization },
     { label: 'Email Delivery', icon: 'outgoing_mail',    route: '/admin/email-deliveries', permission: ADMIN_PERMISSIONS.viewOrders },
   ];
 
   readonly visibleNavItems = computed(() => {
-    return this.navItems.filter(item => this.authService.hasPermission(item.permission));
+    return this.navItems.filter(item => (Array.isArray(item.permission) ? item.permission : [item.permission])
+      .some(permission => this.authService.hasPermission(permission)));
   });
 
   readonly userInitials = computed(() => {

@@ -24,11 +24,8 @@ export class OrderService {
     return this.http.post<VerifyPaymentResponse>(`${this.base}/payments/verify`, req);
   }
 
-  lookupOrders(params: { email?: string; phone?: string; reference?: string }): Observable<ApiResponse<OrderLookupDto[]>> {
-    let httpParams = new HttpParams();
-    if (params.email)     httpParams = httpParams.set('email', params.email);
-    if (params.phone)     httpParams = httpParams.set('phone', params.phone);
-    if (params.reference) httpParams = httpParams.set('reference', params.reference);
+  lookupOrders(reference: string, email: string): Observable<ApiResponse<OrderLookupDto[]>> {
+    const httpParams = new HttpParams().set('reference', reference).set('email', email);
     return this.http.get<ApiResponse<OrderLookupDto[]>>(`${this.base}/orders/lookup`, { params: httpParams });
   }
 
@@ -40,18 +37,18 @@ export class OrderService {
     return this.http.put<OrderSeatsResponse>(`${this.base}/orders/${encodeURIComponent(reference)}/seats`, { reference, token, buyerEmail, selections });
   }
 
-  downloadTicketPdf(code: string): Observable<Blob> {
-    return this.http.get(`${this.base}/tickets/${encodeURIComponent(code)}/pdf`, { responseType: 'blob' });
+  downloadTicketPdf(downloadUrl: string): Observable<Blob> {
+    return this.http.get(this.absoluteApiUrl(downloadUrl), { responseType: 'blob' });
   }
 
-  downloadOrderPdf(reference: string): Observable<Blob> {
-    return this.http.get(`${this.base}/orders/${encodeURIComponent(reference)}/pdf`, { responseType: 'blob' });
+  downloadOrderPdf(reference: string, token: string): Observable<Blob> {
+    return this.http.get(`${this.base}/orders/${encodeURIComponent(reference)}/pdf`, { params:{token}, responseType: 'blob' });
   }
 
-  resendTickets(reference: string): Observable<ApiResponse<never>> {
+  resendTickets(reference: string, email: string): Observable<ApiResponse<never>> {
     return this.http.post<ApiResponse<never>>(
       `${this.base}/orders/${encodeURIComponent(reference)}/resend`,
-      {}
+      { email }
     );
   }
 
@@ -82,5 +79,11 @@ export class OrderService {
     link.download = fileName;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  private absoluteApiUrl(path: string): string {
+    if (/^https?:\/\//i.test(path)) return path;
+    const origin = this.base.replace(/\/api\/?$/, '');
+    return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
   }
 }

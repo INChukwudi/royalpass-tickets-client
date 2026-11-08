@@ -3,7 +3,7 @@
     <div><p class="eyebrow">Sales attribution</p><h1>Referral codes</h1><p>See which internal referrals are driving paid ticket sales.</p></div>
     <div class="header-actions">
       <label>Event<select [(ngModel)]="selectedEventId" (change)="load()"><option value="">All events</option>@for (event of events(); track event.id) {<option [value]="event.id">{{ event.title }}</option>}</select></label>
-      <button type="button" class="secondary" (click)="export()"><mat-icon>download</mat-icon> Export</button>
+      @if (canExport) {<button type="button" class="secondary" (click)="export()"><mat-icon>download</mat-icon> Export</button>}
     </div>
   </header>
 

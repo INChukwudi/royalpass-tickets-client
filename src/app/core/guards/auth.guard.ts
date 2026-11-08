@@ -40,6 +40,14 @@ export const permissionGuard = (permission: string): CanActivateFn => () => {
     : router.createUrlTree([authService.landingRoute()]);
 };
 
+export const anyPermissionGuard = (...permissions: string[]): CanActivateFn => () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  return permissions.some(permission => authService.hasPermission(permission))
+    ? true
+    : router.createUrlTree([authService.landingRoute()]);
+};
+
 export const guestGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);

@@ -143,8 +143,6 @@ export class EventLandingComponent implements OnInit {
     const evt = this.selectedEvent()!;
 
     this.isSubmitting.set(true);
-    const callbackUrl = `${window.location.origin}/tickets/confirmation`;
-
     this.orderService.initiateOrder({
       eventId: evt.id,
       ticketTypeId: item.ticketType.id,
@@ -152,7 +150,6 @@ export class EventLandingComponent implements OnInit {
       buyerName: this.buyerName,
       buyerEmail: this.buyerEmail,
       buyerPhone: this.buyerPhone,
-      callbackUrl,
       referralCode: this.referralCode.trim() || null
     }).subscribe({
       next: res => {
