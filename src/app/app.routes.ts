@@ -63,6 +63,10 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
+        path: 'change-password',
+        loadComponent: () => import('./features/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent)
+      },
+      {
         path: 'dashboard',
         canActivate: [permissionGuard(ADMIN_PERMISSIONS.viewDashboard)],
         loadComponent: () =>
