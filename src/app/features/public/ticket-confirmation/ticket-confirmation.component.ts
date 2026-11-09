@@ -7,6 +7,7 @@ import { OrderService } from '../../../core/services/order.service';
 import { OrderSeatsResponse, SeatDto, TicketTransfer, VerifyPaymentResponse } from '../../../core/models/order.models';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../core/services/toast.service';
+import { publicErrorMessage } from '../../../core/utils/public-error-message';
 
 @Component({
   selector: 'app-ticket-confirmation',
@@ -52,7 +53,7 @@ export class TicketConfirmationComponent implements OnInit {
         if (res.status === 'success') { this.managementToken ||= res.seatAccessToken; this.loadSeats(res); this.loadTransfers(res.reference); }
       },
       error: err => {
-        this.error.set(err?.error?.message ?? 'Could not verify your payment. Please contact support with your reference.');
+        this.error.set(publicErrorMessage(err, 'Could not verify your payment. Please contact support with your reference.'));
         this.isLoading.set(false);
       }
     });
@@ -63,10 +64,10 @@ export class TicketConfirmationComponent implements OnInit {
     const ticketId=this.transferTicketId();if(!ticketId||!this.recipientName.trim()||!this.recipientEmail.trim()){this.toast.warning('Enter the recipient name and email.');return;}
     this.transferring.set(true);this.orderService.createTransfer(ticketId,this.managementToken,this.recipientName.trim(),this.recipientEmail.trim()).subscribe({
       next:value=>{this.transfers.update(items=>[value,...items]);this.transferTicketId.set(null);this.transferring.set(false);this.toast.success('Transfer invitation queued. The ticket remains unchanged until the recipient accepts it.');},
-      error:error=>{this.transferring.set(false);this.toast.error(error?.error?.message??'Could not create the transfer invitation.');}
+      error:error=>{this.transferring.set(false);this.toast.error(publicErrorMessage(error,'Ticket transfer is temporarily unavailable. Please try again later or contact support.'));}
     });
   }
-  cancelTransfer(item:TicketTransfer):void { this.orderService.cancelTransfer(item.id,this.managementToken).subscribe({next:value=>{this.transfers.update(items=>items.map(x=>x.id===value.id?value:x));this.toast.success('Transfer cancelled.');},error:error=>this.toast.error(error?.error?.message??'Could not cancel transfer.')}); }
+  cancelTransfer(item:TicketTransfer):void { this.orderService.cancelTransfer(item.id,this.managementToken).subscribe({next:value=>{this.transfers.update(items=>items.map(x=>x.id===value.id?value:x));this.toast.success('Transfer cancelled.');},error:error=>this.toast.error(publicErrorMessage(error,'Could not cancel the transfer. Please try again.'))}); }
   pendingTransfer(ticketId:string):TicketTransfer|undefined { return this.transfers().find(x=>x.ticketId===ticketId&&x.status==='Pending'); }
   private loadTransfers(reference:string):void { if(!this.managementToken)return;this.orderService.listTransfers(reference,this.managementToken).subscribe({next:value=>this.transfers.set(value)}); }
 
@@ -104,7 +105,7 @@ export class TicketConfirmationComponent implements OnInit {
     this.savingSeats.set(true);
     this.orderService.saveSeats(result.reference,result.seatAccessToken,result.buyerEmail,map.tickets.map(x=>({ticketId:x.id,seatId:x.seatId!}))).subscribe({
       next:value=>{this.seats.set(value);this.savingSeats.set(false);this.toast.success('Your seats have been updated. Download the refreshed tickets.');},
-      error:error=>{this.savingSeats.set(false);this.toast.error(error?.error?.message??'A selected seat is no longer available.');this.loadSeats(result);}
+      error:error=>{this.savingSeats.set(false);this.toast.error(publicErrorMessage(error,'We could not update your seats. Please try again.'));this.loadSeats(result);}
     });
   }
 

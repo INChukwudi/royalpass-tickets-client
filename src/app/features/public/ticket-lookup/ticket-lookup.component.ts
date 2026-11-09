@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { OrderLookupDto } from '../../../core/models/order.models';
 import { OrderService } from '../../../core/services/order.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { publicErrorMessage } from '../../../core/utils/public-error-message';
 
 @Component({
   selector: 'app-ticket-lookup', standalone: true,
@@ -40,7 +41,7 @@ export class TicketLookupComponent {
     this.actionReference.set(reference);
     this.orders.resendTickets(reference, this.email.trim()).subscribe({
       next: response => { this.toast.success(response.message ?? 'Ticket email queued.'); this.actionReference.set(null); },
-      error: error => { this.toast.error(error?.error?.message ?? 'Could not resend the ticket email.'); this.actionReference.set(null); }
+      error: error => { this.toast.error(publicErrorMessage(error, 'Could not resend the ticket email. Please try again later.')); this.actionReference.set(null); }
     });
   }
 }

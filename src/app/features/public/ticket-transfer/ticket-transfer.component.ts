@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { OrderService } from '../../../core/services/order.service';
 import { TicketTransfer } from '../../../core/models/order.models';
+import { publicErrorMessage } from '../../../core/utils/public-error-message';
 
 @Component({
   selector: 'app-ticket-transfer', standalone: true,
@@ -18,12 +19,12 @@ export class TicketTransferComponent implements OnInit {
   readonly error=signal<string|null>(null); recipientEmail=''; token='';
   ngOnInit():void { this.token=this.route.snapshot.paramMap.get('token')??''; this.orders.getTransfer(this.token).subscribe({
     next:value=>{this.transfer.set(value);this.loading.set(false);},
-    error:error=>{this.error.set(error?.error?.message??'This transfer invitation could not be loaded.');this.loading.set(false);}
+    error:error=>{this.error.set(publicErrorMessage(error,'This transfer invitation could not be loaded. Please try again later.'));this.loading.set(false);}
   }); }
   accept():void { if(!this.recipientEmail.trim()){this.error.set('Enter the email address that received this invitation.');return;}
     this.accepting.set(true);this.error.set(null);this.orders.acceptTransfer(this.token,this.recipientEmail.trim()).subscribe({
       next:value=>{this.transfer.set(value);this.accepting.set(false);},
-      error:error=>{this.error.set(error?.error?.message??'The transfer could not be accepted.');this.accepting.set(false);}
+      error:error=>{this.error.set(publicErrorMessage(error,'The transfer could not be accepted right now. Please try again later.'));this.accepting.set(false);}
     });
   }
 }

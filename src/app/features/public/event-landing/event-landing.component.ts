@@ -7,6 +7,7 @@ import { EventService } from '../../../core/services/event.service';
 import { OrderService } from '../../../core/services/order.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EventDetailDto, TicketTypeDto } from '../../../core/models/event.models';
+import { publicErrorMessage } from '../../../core/utils/public-error-message';
 
 declare const AOS: any;
 
@@ -158,7 +159,7 @@ export class EventLandingComponent implements OnInit {
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? err?.error?.errors?.[0] ?? 'Failed to initiate payment. Please try again.';
+        const msg = publicErrorMessage(err, 'Payment could not be started right now. Please try again later.');
         this.toast.error(msg);
       }
     });
