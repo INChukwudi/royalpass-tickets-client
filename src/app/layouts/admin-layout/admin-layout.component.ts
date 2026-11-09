@@ -38,10 +38,10 @@ export class AdminLayoutComponent {
     { label: 'Tickets',      icon: 'confirmation_number',route: '/admin/tickets', permission: ADMIN_PERMISSIONS.viewTickets },
     { label: 'Gate Scanner', icon: 'qr_code_scanner',    route: '/admin/scanner', permission: ADMIN_PERMISSIONS.checkInTickets },
     { label: 'Reports',      icon: 'bar_chart',          route: '/admin/reports', permission: ADMIN_PERMISSIONS.viewReports },
-    { label: 'Referrals',    icon: 'group_add',          route: '/admin/referrals', permission: [ADMIN_PERMISSIONS.manageReferrals, ADMIN_PERMISSIONS.viewReports, ADMIN_PERMISSIONS.manageOrganization] },
+    { label: 'Referrals',    icon: 'group_add',          route: '/admin/referrals', permission: ADMIN_PERMISSIONS.manageReferrals },
     { label: 'Users',        icon: 'manage_accounts',    route: '/admin/users', permission: ADMIN_PERMISSIONS.manageUsers },
     { label: 'Organization', icon: 'business',           route: '/admin/organization', permission: ADMIN_PERMISSIONS.manageOrganization },
-    { label: 'Email Delivery', icon: 'outgoing_mail',    route: '/admin/email-deliveries', permission: [ADMIN_PERMISSIONS.manageEmailDelivery, ADMIN_PERMISSIONS.viewOrders] },
+    { label: 'Email Delivery', icon: 'outgoing_mail',    route: '/admin/email-deliveries', permission: ADMIN_PERMISSIONS.manageEmailDelivery },
   ];
 
   readonly visibleNavItems = computed(() => {

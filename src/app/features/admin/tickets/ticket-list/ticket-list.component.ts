@@ -21,8 +21,7 @@ import { ADMIN_PERMISSIONS } from '../../../../core/models/auth.models';
 })
 export class TicketListComponent implements OnInit {
   private readonly admin=inject(AdminService); private readonly toast=inject(ToastService);private readonly auth=inject(AuthService);
-  readonly canManageSeats=this.auth.hasPermission(ADMIN_PERMISSIONS.manageSeats)
-    || this.auth.hasPermission(ADMIN_PERMISSIONS.createManualOrders);
+  readonly canManageSeats=this.auth.hasPermission(ADMIN_PERMISSIONS.manageSeats);
   readonly canManageTickets=this.auth.hasPermission(ADMIN_PERMISSIONS.manageTickets);
   readonly canCheckIn=this.auth.hasPermission(ADMIN_PERMISSIONS.checkInTickets);
   readonly items=signal<AdminTicket[]>([]);readonly total=signal(0);readonly loading=signal(false);readonly acting=signal<string|null>(null);

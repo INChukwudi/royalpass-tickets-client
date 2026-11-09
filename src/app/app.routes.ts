@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { anyPermissionGuard, authGuard, guestGuard, permissionGuard } from './core/guards/auth.guard';
+import { authGuard, guestGuard, permissionGuard } from './core/guards/auth.guard';
 import { ADMIN_PERMISSIONS } from './core/models/auth.models';
 
 export const routes: Routes = [
@@ -91,7 +91,7 @@ export const routes: Routes = [
       },
       {
         path: 'orders/:reference/seats',
-        canActivate: [anyPermissionGuard(ADMIN_PERMISSIONS.manageSeats, ADMIN_PERMISSIONS.createManualOrders)],
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageSeats)],
         loadComponent: () => import('./features/admin/orders/seat-allocation/admin-seat-allocation.component').then(m => m.AdminSeatAllocationComponent)
       },
       {
@@ -114,7 +114,7 @@ export const routes: Routes = [
       },
       {
         path: 'referrals',
-        canActivate: [anyPermissionGuard(ADMIN_PERMISSIONS.manageReferrals, ADMIN_PERMISSIONS.viewReports, ADMIN_PERMISSIONS.manageOrganization)],
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageReferrals)],
         loadComponent: () =>
           import('./features/admin/referrals/referrals.component').then(m => m.ReferralsComponent)
       },
@@ -132,7 +132,7 @@ export const routes: Routes = [
       },
       {
         path: 'email-deliveries',
-        canActivate: [anyPermissionGuard(ADMIN_PERMISSIONS.manageEmailDelivery, ADMIN_PERMISSIONS.viewOrders)],
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageEmailDelivery)],
         loadComponent: () =>
           import('./features/admin/email-deliveries/email-deliveries.component').then(m => m.EmailDeliveriesComponent)
       },
