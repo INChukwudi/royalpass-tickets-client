@@ -5,18 +5,14 @@
       <h1>Email delivery</h1>
       <p>Monitor queued, accepted, delivered, failed and spam-reported transactional messages.</p>
     </div>
-    <label>
-      Status
-      <select [(ngModel)]="status" (change)="load()">
-        <option value="">All</option>
-        <option>Pending</option>
-        <option>Processing</option>
-        <option>Sent</option>
-        <option>Delivered</option>
-        <option>Failed</option>
-        <option>Complained</option>
-      </select>
-    </label>
+    <form class="filters" (ngSubmit)="apply()">
+      <label>Email<input name="search" [(ngModel)]="search" type="search" placeholder="Search recipient email"></label>
+      <label>Status<select name="status" [(ngModel)]="status" (change)="changeStatus()">
+          <option value="">All</option><option>Pending</option><option>Processing</option><option>Sent</option>
+          <option>Delivered</option><option>Failed</option><option>Complained</option>
+      </select></label>
+      <button type="submit">Search</button>
+    </form>
   </header>
 
   @if (loading()) {
@@ -45,5 +41,9 @@
         </tbody>
       </table>
     </div>
+    <footer class="pager">
+      <span>{{ total() | number:'1.0-0' }} message{{ total() === 1 ? '' : 's' }} · Page {{ page | number:'1.0-0' }} of {{ lastPage | number:'1.0-0' }}</span>
+      <div><button type="button" (click)="move(-1)" [disabled]="page === 1 || loading()">Previous</button><button type="button" (click)="move(1)" [disabled]="page === lastPage || loading()">Next</button></div>
+    </footer>
   }
 </section>

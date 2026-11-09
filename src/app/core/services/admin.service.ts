@@ -46,7 +46,11 @@ export class AdminService {
   updateUser(id:string,request:SaveAdminUserRequest):Observable<AdminUser>{return this.http.put<AdminUser>(`${this.base}/users/${id}`,request);}
   organizationPaymentSettings():Observable<OrganizationPaymentSettings>{return this.http.get<OrganizationPaymentSettings>(`${this.base}/organization/payment-settings`);}
   saveOrganizationPaymentSettings(request:SaveOrganizationPaymentSettingsRequest):Observable<OrganizationPaymentSettings>{return this.http.put<OrganizationPaymentSettings>(`${this.base}/organization/payment-settings`,request);}
-  emailDeliveries(status?:string):Observable<EmailDeliveryPage>{return this.http.get<EmailDeliveryPage>(`${this.base}/email-deliveries`,{params:status?{status}:{}});}
+  emailDeliveries(page:number,pageSize:number,status:string,search:string):Observable<EmailDeliveryPage>{
+    let params=new HttpParams().set('page',page).set('pageSize',pageSize);
+    if(status) params=params.set('status',status); if(search) params=params.set('search',search);
+    return this.http.get<EmailDeliveryPage>(`${this.base}/email-deliveries`,{params});
+  }
   retryEmailDelivery(id:string):Observable<ApiResponse<never>>{return this.http.post<ApiResponse<never>>(`${this.base}/email-deliveries/${id}/retry`,{});}
   ticketTransfers(id:string):Observable<TicketTransfer[]>{return this.http.get<TicketTransfer[]>(`${this.base}/tickets/${id}/transfers`);}
   eventReferralCodes(eventId:string):Observable<ReferralCode[]>{return this.http.get<ReferralCode[]>(`${this.base}/events/${eventId}/referral-codes`);}
