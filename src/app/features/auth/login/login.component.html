@@ -85,7 +85,7 @@
         <div class="lform__field">
           <div class="lform__label-row">
             <label class="lform__label">Password</label>
-            <a href="#" class="lform__forgot">Forgot password?</a>
+            <a routerLink="/admin/forgot-password" class="lform__forgot">Forgot password?</a>
           </div>
           <div class="lform__input-wrap" [class.is-error]="form.get('password')?.invalid && form.get('password')?.touched">
             <span class="material-icons lform__icon">lock_outline</span>

@@ -34,6 +34,22 @@ export class AuthService {
     );
   }
 
+  forgotPassword(email: string) {
+    return this.http.post<{message: string}>(`${environment.apiUrl}/auth/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string) {
+    return this.http.post<{message: string}>(`${environment.apiUrl}/auth/reset-password`, { token, newPassword });
+  }
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.http.post<{message: string}>(`${environment.apiUrl}/auth/change-password`, { currentPassword, newPassword })
+      .pipe(tap(() => {
+        localStorage.removeItem(USER_KEY);
+        this._currentUser.set(null);
+      }));
+  }
+
   logout() {
     this.http.post<void>(`${environment.apiUrl}/auth/logout`, {}).pipe(
       finalize(() => this.clearSession())
