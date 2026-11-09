@@ -9,6 +9,8 @@ import { AdminTicket } from '../../../../core/models/admin.models';
 import { ToastService } from '../../../../core/services/toast.service';
 import { environment } from '../../../../../environments/environment';
 import { TicketTransfer } from '../../../../core/models/order.models';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../../core/models/auth.models';
 
 @Component({
   selector: 'app-ticket-list',
@@ -18,7 +20,11 @@ import { TicketTransfer } from '../../../../core/models/order.models';
   styleUrl: './ticket-list.component.scss'
 })
 export class TicketListComponent implements OnInit {
-  private readonly admin=inject(AdminService); private readonly toast=inject(ToastService);
+  private readonly admin=inject(AdminService); private readonly toast=inject(ToastService);private readonly auth=inject(AuthService);
+  readonly canManageSeats=this.auth.hasPermission(ADMIN_PERMISSIONS.manageSeats)
+    || this.auth.hasPermission(ADMIN_PERMISSIONS.createManualOrders);
+  readonly canManageTickets=this.auth.hasPermission(ADMIN_PERMISSIONS.manageTickets);
+  readonly canCheckIn=this.auth.hasPermission(ADMIN_PERMISSIONS.checkInTickets);
   readonly items=signal<AdminTicket[]>([]);readonly total=signal(0);readonly loading=signal(false);readonly acting=signal<string|null>(null);
   readonly selected=signal<AdminTicket|null>(null);
   readonly transfers=signal<TicketTransfer[]>([]);

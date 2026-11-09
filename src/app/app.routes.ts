@@ -91,7 +91,7 @@ export const routes: Routes = [
       },
       {
         path: 'orders/:reference/seats',
-        canActivate: [permissionGuard(ADMIN_PERMISSIONS.createManualOrders)],
+        canActivate: [anyPermissionGuard(ADMIN_PERMISSIONS.manageSeats, ADMIN_PERMISSIONS.createManualOrders)],
         loadComponent: () => import('./features/admin/orders/seat-allocation/admin-seat-allocation.component').then(m => m.AdminSeatAllocationComponent)
       },
       {
@@ -114,7 +114,7 @@ export const routes: Routes = [
       },
       {
         path: 'referrals',
-        canActivate: [anyPermissionGuard(ADMIN_PERMISSIONS.viewReports, ADMIN_PERMISSIONS.manageOrganization)],
+        canActivate: [anyPermissionGuard(ADMIN_PERMISSIONS.manageReferrals, ADMIN_PERMISSIONS.viewReports, ADMIN_PERMISSIONS.manageOrganization)],
         loadComponent: () =>
           import('./features/admin/referrals/referrals.component').then(m => m.ReferralsComponent)
       },
@@ -132,7 +132,7 @@ export const routes: Routes = [
       },
       {
         path: 'email-deliveries',
-        canActivate: [permissionGuard(ADMIN_PERMISSIONS.viewOrders)],
+        canActivate: [anyPermissionGuard(ADMIN_PERMISSIONS.manageEmailDelivery, ADMIN_PERMISSIONS.viewOrders)],
         loadComponent: () =>
           import('./features/admin/email-deliveries/email-deliveries.component').then(m => m.EmailDeliveriesComponent)
       },

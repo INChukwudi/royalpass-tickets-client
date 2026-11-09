@@ -19,6 +19,9 @@ export const ADMIN_PERMISSIONS = {
   viewReports: 'reports.view',
   manageUsers: 'users.manage',
   manageOrganization: 'organization.manage',
+  manageSeats: 'seats.manage',
+  manageReferrals: 'referrals.manage',
+  manageEmailDelivery: 'email-delivery.manage',
 } as const;
 
 export interface LoginRequest {
