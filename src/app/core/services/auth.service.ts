@@ -82,7 +82,7 @@ export class AuthService {
       ['dashboard.view', '/admin/dashboard'], ['events.manage', '/admin/events'],
       ['orders.view', '/admin/orders'], ['orders.manual.create', '/admin/orders/manual'],
       ['tickets.view', '/admin/tickets'], ['tickets.checkin', '/admin/scanner'],
-        ['seats.manage', '/admin/tickets'], ['referrals.manage', '/admin/referrals'],
+        ['seats.manage', '/admin/seats'], ['referrals.manage', '/admin/referrals'],
         ['email-delivery.manage', '/admin/email-deliveries'],
         ['reports.view', '/admin/reports'], ['users.manage', '/admin/users'],
         ['organization.manage', '/admin/organization']

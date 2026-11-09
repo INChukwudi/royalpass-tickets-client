@@ -37,6 +37,7 @@ export class AdminLayoutComponent {
     { label: 'Manual Sale',  icon: 'post_add',           route: '/admin/orders/manual', permission: ADMIN_PERMISSIONS.createManualOrders },
     { label: 'Tickets',      icon: 'confirmation_number',route: '/admin/tickets', permission: ADMIN_PERMISSIONS.viewTickets },
     { label: 'Gate Scanner', icon: 'qr_code_scanner',    route: '/admin/scanner', permission: ADMIN_PERMISSIONS.checkInTickets },
+    { label: 'Seat Overview', icon: 'event_seat',        route: '/admin/seats', permission: ADMIN_PERMISSIONS.manageSeats },
     { label: 'Reports',      icon: 'bar_chart',          route: '/admin/reports', permission: ADMIN_PERMISSIONS.viewReports },
     { label: 'Referrals',    icon: 'group_add',          route: '/admin/referrals', permission: ADMIN_PERMISSIONS.manageReferrals },
     { label: 'Users',        icon: 'manage_accounts',    route: '/admin/users', permission: ADMIN_PERMISSIONS.manageUsers },

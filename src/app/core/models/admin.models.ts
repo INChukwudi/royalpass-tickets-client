@@ -24,3 +24,6 @@ export interface ReferralCode { id:string;code:string;label:string|null;isActive
 export interface ReferralUsageRow { referralCodeId:string;code:string;label:string|null;isActive:boolean;orders:number;tickets:number;revenue:number;onlineOrders:number;manualOrders:number;lastUsedAt:string|null; }
 export interface ReferralUsageTotals { paidOrders:number;tickets:number;revenue:number;attributedOrders:number;attributedTickets:number;attributedRevenue:number;unattributedOrders:number;unattributedTickets:number;unattributedRevenue:number; }
 export interface ReferralUsageReport { items:ReferralUsageRow[];totals:ReferralUsageTotals; }
+export interface SeatOverviewEvent { id:string;title:string;eventDate:string;venue:string;totalSeats:number;assignedSeats:number; }
+export interface SeatOverviewSeat { id:string;label:string;section:string;row:number;number:number;x:number;y:number;band:string;state:'available'|'assigned'|'locked'|'broken';ticketId:string|null;ticketCode:string|null;attendeeName:string|null;attendeeEmail:string|null; }
+export interface SeatOverview { eventId:string;eventTitle:string;eventDate:string;venue:string;totals:{total:number;assigned:number;available:number;locked:number;broken:number;awaitingSeat:number};bands:{band:string;total:number;available:number;assigned:number;locked:number}[];seats:SeatOverviewSeat[]; }

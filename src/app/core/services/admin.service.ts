@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
-import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, EmailDeliveryPage, OrganizationPaymentSettings, PagedResponse, ReferralCode, ReferralUsageReport, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult } from '../models/admin.models';
+import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, EmailDeliveryPage, OrganizationPaymentSettings, PagedResponse, ReferralCode, ReferralUsageReport, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult, SeatOverview, SeatOverviewEvent } from '../models/admin.models';
 import { OrderSeatsResponse, TicketTransfer } from '../models/order.models';
 
 @Injectable({ providedIn: 'root' })
@@ -26,6 +26,8 @@ export class AdminService {
   lockSeat(seatId:string,locked:boolean,reason:string|null):Observable<void>{return this.http.put<void>(`${this.base}/seats/${seatId}/lock`,{seatId,locked,reason});}
   seatHistory(eventId:string):Observable<{ticketCode:string;previousSeat:string|null;newSeat:string|null;changedBy:string;reason:string|null;changedAt:string}[]>{return this.http.get<any[]>(`${this.base}/events/${eventId}/seats/history`);}
   resetSeatLink(reference:string):Observable<{token:string}>{return this.http.post<{token:string}>(`${this.base}/orders/${encodeURIComponent(reference)}/seats/reset-link`,{reference});}
+  seatOverviewEvents():Observable<SeatOverviewEvent[]>{return this.http.get<SeatOverviewEvent[]>(`${this.base}/seats/events`);}
+  seatOverview(eventId:string):Observable<SeatOverview>{return this.http.get<SeatOverview>(`${this.base}/events/${eventId}/seats/overview`);}
   tickets(page:number,pageSize:number,search:string,status:string,hasSeat:string=''):Observable<PagedResponse<AdminTicket>> {
     let p=new HttpParams().set('page',page).set('pageSize',pageSize);
     if(search) p=p.set('search',search); if(status) p=p.set('status',status); if(hasSeat) p=p.set('hasSeat',hasSeat);

@@ -67,6 +67,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/auth/change-password/change-password.component').then(m => m.ChangePasswordComponent)
       },
       {
+        path: 'seats',
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageSeats)],
+        loadComponent: () => import('./features/admin/seats/seat-overview.component').then(m => m.SeatOverviewComponent)
+      },
+      {
         path: 'dashboard',
         canActivate: [permissionGuard(ADMIN_PERMISSIONS.viewDashboard)],
         loadComponent: () =>
