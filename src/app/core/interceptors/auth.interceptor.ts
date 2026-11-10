@@ -1,8 +1,7 @@
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse, HttpClient, HttpEvent } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, finalize, Observable, shareReplay, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { RefreshTokenResponse } from '../models/auth.models';
 import { Router } from '@angular/router';
@@ -26,45 +25,78 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     && !isCsrfRequest;
 
   if (needsCsrf && !authService.csrfToken()) {
-    csrfInFlight$ ??= http.get<{ token: string }>(`${environment.apiUrl}/auth/csrf`, {
-      withCredentials: true
-    }).pipe(
-      finalize(() => { csrfInFlight$ = null; }),
-      shareReplay({ bufferSize: 1, refCount: false })
-    );
-
-    return csrfInFlight$.pipe(
+    return getCsrfToken(http).pipe(
       switchMap(response => {
         authService.setCsrfToken(response.token);
         return next(withSecurity(req, response.token));
-      })
+      }),
+      catchError(error => handleRequestError(error, req, next, http, authService, router, needsCsrf, isRefreshRequest, isLogoutRequest))
     );
   }
 
   const authReq = withSecurity(req, authService.csrfToken());
 
   return next(authReq).pipe(
-    catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && !isRefreshRequest && !isLogoutRequest && authService.isAuthenticated()) {
-        refreshInFlight$ ??= http.post<RefreshTokenResponse>(`${environment.apiUrl}/auth/refresh`, {}, {
-          withCredentials: true
-        }).pipe(
-          finalize(() => { refreshInFlight$ = null; }),
-          shareReplay({ bufferSize: 1, refCount: false })
-        );
-
-        return refreshInFlight$.pipe(
-          switchMap(() => next(withSecurity(req, authService.csrfToken()))),
-          catchError(refreshError => {
-            authService.expireSession(router.url);
-            return throwError(() => refreshError);
-          })
-        );
-      }
-      return throwError(() => error);
-    })
+    catchError(error => handleRequestError(error, req, next, http, authService, router, needsCsrf, isRefreshRequest, isLogoutRequest))
   );
 };
+
+function handleRequestError(
+  error: HttpErrorResponse,
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+  http: HttpClient,
+  authService: AuthService,
+  router: Router,
+  needsCsrf: boolean,
+  isRefreshRequest: boolean,
+  isLogoutRequest: boolean
+): Observable<HttpEvent<unknown>> {
+  if (needsCsrf && isAntiforgeryError(error)) {
+    authService.clearCsrfToken();
+    return getCsrfToken(http).pipe(
+      switchMap(response => {
+        authService.setCsrfToken(response.token);
+        // Retry exactly once. This retry is sent directly to the next handler, so another
+        // antiforgery rejection is returned to the caller instead of looping indefinitely.
+        return next(withSecurity(req, response.token));
+      })
+    );
+  }
+
+  if (error.status === 401 && !isRefreshRequest && !isLogoutRequest && authService.isAuthenticated()) {
+    refreshInFlight$ ??= http.post<RefreshTokenResponse>(`${environment.apiUrl}/auth/refresh`, {}, {
+      withCredentials: true
+    }).pipe(
+      finalize(() => { refreshInFlight$ = null; }),
+      shareReplay({ bufferSize: 1, refCount: false })
+    );
+
+    return refreshInFlight$.pipe(
+      switchMap(() => next(withSecurity(req, authService.csrfToken()))),
+      catchError(refreshError => {
+        authService.expireSession(router.url);
+        return throwError(() => refreshError);
+      })
+    );
+  }
+  return throwError(() => error);
+}
+
+function getCsrfToken(http: HttpClient): Observable<{ token: string }> {
+  csrfInFlight$ ??= http.get<{ token: string }>(`${environment.apiUrl}/auth/csrf`, {
+    withCredentials: true
+  }).pipe(
+    finalize(() => { csrfInFlight$ = null; }),
+    shareReplay({ bufferSize: 1, refCount: false })
+  );
+  return csrfInFlight$;
+}
+
+function isAntiforgeryError(error: HttpErrorResponse): boolean {
+  return error.status === 400
+    && error.error?.message === 'The request security token is missing or invalid.';
+}
 
 function withSecurity(req: HttpRequest<unknown>, csrfToken: string | null): HttpRequest<unknown> {
   const headers = csrfToken && unsafeMethods.has(req.method.toUpperCase())

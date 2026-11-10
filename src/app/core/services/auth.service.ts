@@ -26,6 +26,7 @@ export class AuthService {
     this._isLoading.set(true);
     return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, request).pipe(
       tap(response => {
+        this._csrfToken.set(null);
         this.storeUser(response.user);
         this._currentUser.set(response.user);
         this._isLoading.set(false);
@@ -101,6 +102,10 @@ export class AuthService {
 
   setCsrfToken(token: string) {
     this._csrfToken.set(token);
+  }
+
+  clearCsrfToken() {
+    this._csrfToken.set(null);
   }
 
   storeUser(user: User) {
