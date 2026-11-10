@@ -19,6 +19,12 @@
         <span class="material-icons">{{ created.emailQueued ? 'schedule_send' : 'warning_amber' }}</span>
         <span>{{ created.emailStatus }}</span>
       </div>
+      @if (created.seatStatus) {
+        <div class="delivery" [class.delivery--warning]="!created.seatsAssigned">
+          <span class="material-icons">{{ created.seatsAssigned ? 'event_available' : 'event_busy' }}</span>
+          <span>{{ created.seatStatus }}</span>
+        </div>
+      }
 
       <div class="ticket-codes">
         @for (code of created.ticketCodes; track code) { <span>{{ code }}</span> }
@@ -66,9 +72,9 @@
           <section class="form-card">
             <div class="card-heading"><span class="material-icons">payments</span><div><h2>Payment record</h2><p>Capture how and when the original payment was received.</p></div></div>
             <div class="fields two-col">
-              <label class="field"><span>Amount paid (₦) *</span><input type="number" min="0" step="0.01" formControlName="amountPaid"></label>
+              <label class="field"><span>Amount paid (₦) *</span><input type="number" min="0" max="1000000000000" step="0.01" formControlName="amountPaid"></label>
               <label class="field"><span>Payment method *</span><select formControlName="paymentMethod"><option>Cash</option><option>Bank Transfer</option><option>POS</option><option>Cheque</option><option>Complimentary</option><option>Other</option></select></label>
-              <label class="field"><span>Purchase date *</span><input type="datetime-local" formControlName="purchasedAt"></label>
+              <label class="field"><span>Purchase date *</span><input type="datetime-local" min="2000-01-01T00:00" formControlName="purchasedAt"></label>
               <label class="field"><span>External reference</span><input formControlName="externalReference" placeholder="Receipt or transfer reference"></label>
               <label class="field"><span>Referral code</span><select formControlName="referralCode"><option value="">No referral code</option>@for (referral of referralCodes(); track referral.id) {<option [value]="referral.code">{{ referral.code }}{{ referral.label ? ' — ' + referral.label : '' }}</option>}</select></label>
               <label class="field full"><span>Internal notes</span><textarea formControlName="notes" rows="3" placeholder="Optional context for administrators"></textarea></label>

@@ -37,7 +37,7 @@ export class ManualOrderComponent implements OnInit {
     buyerEmail: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
     buyerPhone: ['', [Validators.required, Validators.maxLength(50)]],
     quantity: [1, [Validators.required, Validators.min(1), Validators.max(100)]],
-    amountPaid: [0, [Validators.required, Validators.min(0)]],
+    amountPaid: [0, [Validators.required, Validators.min(0), Validators.max(1_000_000_000_000)]],
     paymentMethod: ['Cash', Validators.required],
     externalReference: [''],
     purchasedAt: [this.localDateTime(), Validators.required],
@@ -119,7 +119,7 @@ export class ManualOrderComponent implements OnInit {
       },
       error: error => {
         this.saving.set(false);
-        this.toast.error(error?.error?.message ?? 'Could not record the manual sale.');
+        this.toast.error(this.errorMessage(error));
       }
     });
   }
@@ -139,5 +139,25 @@ export class ManualOrderComponent implements OnInit {
     const date = new Date();
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
+  }
+
+  private errorMessage(error: any): string {
+    const body = error?.error;
+    if (typeof body?.message === 'string' && body.message.trim()) return body.message;
+    if (typeof body?.detail === 'string' && body.detail.trim()) return body.detail;
+
+    const errors = body?.errors;
+    if (Array.isArray(errors)) {
+      const first = errors.find(item => typeof item === 'string' || item?.reason || item?.errorMessage);
+      if (typeof first === 'string') return first;
+      if (first?.reason) return first.reason;
+      if (first?.errorMessage) return first.errorMessage;
+    }
+    if (errors && typeof errors === 'object') {
+      const first = Object.values(errors).flat().find(item => typeof item === 'string');
+      if (typeof first === 'string') return first;
+    }
+    if (error?.status === 409) return 'Another sale changed this inventory. Please review availability and try again.';
+    return 'Could not record the manual sale. No sale was saved; please review the details and try again.';
   }
 }
