@@ -55,6 +55,7 @@ export class AdminService {
   }
   retryEmailDelivery(id:string):Observable<ApiResponse<never>>{return this.http.post<ApiResponse<never>>(`${this.base}/email-deliveries/${id}/retry`,{});}
   ticketTransfers(id:string):Observable<TicketTransfer[]>{return this.http.get<TicketTransfer[]>(`${this.base}/tickets/${id}/transfers`);}
+  createTicketTransfer(id:string,recipientName:string,recipientEmail:string):Observable<TicketTransfer>{return this.http.post<TicketTransfer>(`${this.base}/tickets/${id}/transfers`,{recipientName,recipientEmail});}
   eventReferralCodes(eventId:string):Observable<ReferralCode[]>{return this.http.get<ReferralCode[]>(`${this.base}/events/${eventId}/referral-codes`);}
   referralCodes():Observable<ReferralCode[]>{return this.http.get<ReferralCode[]>(`${this.base}/referral-codes`);}
   referralReport(eventId?:string):Observable<ReferralUsageReport>{return this.http.get<ReferralUsageReport>(`${this.base}/referral-codes/report`,{params:eventId?{eventId}:{}});}
