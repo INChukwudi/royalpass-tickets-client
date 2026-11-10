@@ -5,6 +5,7 @@ import { AuthService } from '../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { RefreshTokenResponse } from '../models/auth.models';
+import { Router } from '@angular/router';
 
 let refreshInFlight$: Observable<RefreshTokenResponse> | null = null;
 let csrfInFlight$: Observable<{ token: string }> | null = null;
@@ -14,6 +15,7 @@ const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
   const authService = inject(AuthService);
   const http = inject(HttpClient);
+  const router = inject(Router);
 
   const isRefreshRequest = req.url.endsWith('/auth/refresh');
   const isLogoutRequest = req.url.endsWith('/auth/logout');
@@ -54,7 +56,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
         return refreshInFlight$.pipe(
           switchMap(() => next(withSecurity(req, authService.csrfToken()))),
           catchError(refreshError => {
-            authService.clearSession();
+            authService.expireSession(router.url);
             return throwError(() => refreshError);
           })
         );

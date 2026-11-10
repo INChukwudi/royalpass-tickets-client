@@ -12,6 +12,7 @@ export class AuthService {
   private readonly _currentUser = signal<User | null>(this.loadUser());
   private readonly _isLoading = signal(false);
   private readonly _csrfToken = signal<string | null>(null);
+  private pendingReturnUrl: string | null = null;
 
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
@@ -59,10 +60,43 @@ export class AuthService {
   }
 
   clearSession() {
+    this.pendingReturnUrl = null;
+    this.clearLocalSession();
+    this.router.navigate(['/admin/login']);
+  }
+
+  expireSession(returnUrl: string) {
+    const safeReturnUrl = this.safeReturnUrl(returnUrl);
+    if (safeReturnUrl) this.pendingReturnUrl = safeReturnUrl;
+    this.clearLocalSession();
+    this.router.navigate(['/admin/login'], {
+      queryParams: this.pendingReturnUrl ? { returnUrl: this.pendingReturnUrl } : undefined
+    });
+  }
+
+  consumeReturnUrl(value: string | null | undefined): string | null {
+    const returnUrl = this.safeReturnUrl(value) ?? this.pendingReturnUrl;
+    this.pendingReturnUrl = null;
+    return returnUrl;
+  }
+
+  safeReturnUrl(value: string | null | undefined): string | null {
+    if (!value || value.startsWith('//')) return null;
+    try {
+      const tree = this.router.parseUrl(value);
+      const primary = tree.root.children['primary'];
+      const segments = primary?.segments.map(segment => segment.path) ?? [];
+      if (segments[0] !== 'admin' || ['login', 'forgot-password', 'reset-password'].includes(segments[1])) return null;
+      return this.router.serializeUrl(tree);
+    } catch {
+      return null;
+    }
+  }
+
+  private clearLocalSession() {
     localStorage.removeItem(USER_KEY);
     this._currentUser.set(null);
     this._csrfToken.set(null);
-    this.router.navigate(['/admin/login']);
   }
 
   setCsrfToken(token: string) {
