@@ -175,6 +175,48 @@ img { max-width: 100%; height: auto; display: block; }
   &:active { transform: translateY(0); }
 }
 
+/* Admin layout owns the responsive page gutter. Feature pages should not add a
+   second full-page gutter, which previously made newer screens look misaligned. */
+.admin-content {
+  :is(
+    .users-page,
+    .referrals-page,
+    .delivery-page,
+    .overview,
+    .allocation,
+    .manual-page,
+    .admin-list,
+    .reports-page,
+    .scanner-page
+  ) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .btn-gold {
+    appearance: none;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--deep);
+    border: 0;
+    border-radius: var(--radius-sm);
+    padding: 12px 24px;
+    font: 700 .9rem 'Inter', sans-serif;
+    line-height: 1.2;
+    box-shadow: var(--shadow-gold);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+}
+
 /* ─── Toast Notifications ────────────────────────────────────────────────────── */
 
 /* Shared base — bigger, bolder, readable */
