@@ -7,6 +7,9 @@ import { environment } from '../../../environments/environment';
 import { RefreshTokenResponse } from '../models/auth.models';
 
 let refreshInFlight$: Observable<RefreshTokenResponse> | null = null;
+let csrfInFlight$: Observable<{ token: string }> | null = null;
+
+const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
   const authService = inject(AuthService);
@@ -14,7 +17,29 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
 
   const isRefreshRequest = req.url.endsWith('/auth/refresh');
   const isLogoutRequest = req.url.endsWith('/auth/logout');
-  const authReq = req.clone({ withCredentials: true });
+  const isCsrfRequest = req.url.endsWith('/auth/csrf');
+  const needsCsrf = unsafeMethods.has(req.method.toUpperCase())
+    && req.url.startsWith(environment.apiUrl)
+    && authService.isAuthenticated()
+    && !isCsrfRequest;
+
+  if (needsCsrf && !authService.csrfToken()) {
+    csrfInFlight$ ??= http.get<{ token: string }>(`${environment.apiUrl}/auth/csrf`, {
+      withCredentials: true
+    }).pipe(
+      finalize(() => { csrfInFlight$ = null; }),
+      shareReplay({ bufferSize: 1, refCount: false })
+    );
+
+    return csrfInFlight$.pipe(
+      switchMap(response => {
+        authService.setCsrfToken(response.token);
+        return next(withSecurity(req, response.token));
+      })
+    );
+  }
+
+  const authReq = withSecurity(req, authService.csrfToken());
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -27,7 +52,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
         );
 
         return refreshInFlight$.pipe(
-          switchMap(() => next(req.clone({ withCredentials: true }))),
+          switchMap(() => next(withSecurity(req, authService.csrfToken()))),
           catchError(refreshError => {
             authService.clearSession();
             return throwError(() => refreshError);
@@ -38,3 +63,10 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     })
   );
 };
+
+function withSecurity(req: HttpRequest<unknown>, csrfToken: string | null): HttpRequest<unknown> {
+  const headers = csrfToken && unsafeMethods.has(req.method.toUpperCase())
+    ? { 'X-XSRF-TOKEN': csrfToken }
+    : undefined;
+  return req.clone({ withCredentials: true, setHeaders: headers });
+}

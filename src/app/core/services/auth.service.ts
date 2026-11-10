@@ -11,11 +11,13 @@ const USER_KEY = 'ct_user';
 export class AuthService {
   private readonly _currentUser = signal<User | null>(this.loadUser());
   private readonly _isLoading = signal(false);
+  private readonly _csrfToken = signal<string | null>(null);
 
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
   readonly isLoading = this._isLoading.asReadonly();
   readonly userRole = computed(() => this._currentUser()?.role ?? null);
+  readonly csrfToken = this._csrfToken.asReadonly();
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -59,7 +61,12 @@ export class AuthService {
   clearSession() {
     localStorage.removeItem(USER_KEY);
     this._currentUser.set(null);
+    this._csrfToken.set(null);
     this.router.navigate(['/admin/login']);
+  }
+
+  setCsrfToken(token: string) {
+    this._csrfToken.set(token);
   }
 
   storeUser(user: User) {
