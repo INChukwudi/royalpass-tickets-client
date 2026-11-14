@@ -33,7 +33,7 @@ export class AdminService {
     if(search) p=p.set('search',search); if(status) p=p.set('status',status); if(hasSeat) p=p.set('hasSeat',hasSeat);
     return this.http.get<PagedResponse<AdminTicket>>(`${this.base}/tickets`,{params:p});
   }
-  ticketAction(id:string,action:'cancel'|'complimentary'|'checkin'|'reverse-checkin'|'resend'):Observable<ApiResponse<never>> {
+  ticketAction(id:string,action:'cancel'|'reactivate'|'complimentary'|'checkin'|'reverse-checkin'|'resend'):Observable<ApiResponse<never>> {
     return action==='resend'
       ? this.http.post<ApiResponse<never>>(`${this.base}/tickets/${id}/resend`,{})
       : this.http.patch<ApiResponse<never>>(`${this.base}/tickets/${id}/${action}`,{});
@@ -57,6 +57,7 @@ export class AdminService {
   resendTransferSeatAccess():Observable<{eligible:number;queued:number;alreadyQueued:number}>{return this.http.post<{eligible:number;queued:number;alreadyQueued:number}>(`${this.base}/ticket-transfers/resend-seat-access`,{});}
   ticketTransfers(id:string):Observable<TicketTransfer[]>{return this.http.get<TicketTransfer[]>(`${this.base}/tickets/${id}/transfers`);}
   createTicketTransfer(id:string,recipientName:string,recipientEmail:string):Observable<TicketTransfer>{return this.http.post<TicketTransfer>(`${this.base}/tickets/${id}/transfers`,{recipientName,recipientEmail});}
+  cancelTicketTransfer(id:string):Observable<TicketTransfer>{return this.http.post<TicketTransfer>(`${this.base}/ticket-transfers/${id}/cancel`,{});}
   eventReferralCodes(eventId:string):Observable<ReferralCode[]>{return this.http.get<ReferralCode[]>(`${this.base}/events/${eventId}/referral-codes`);}
   referralCodes():Observable<ReferralCode[]>{return this.http.get<ReferralCode[]>(`${this.base}/referral-codes`);}
   referralReport(eventId?:string):Observable<ReferralUsageReport>{return this.http.get<ReferralUsageReport>(`${this.base}/referral-codes/report`,{params:eventId?{eventId}:{}});}

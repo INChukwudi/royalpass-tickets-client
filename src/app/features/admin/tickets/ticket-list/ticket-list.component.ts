@@ -44,8 +44,13 @@ export class TicketListComponent implements OnInit {
     this.transferring.set(true);
     this.admin.createTicketTransfer(ticket.id,name,email).subscribe({next:value=>{this.transfers.update(items=>[value,...items]);this.transferOpen.set(false);this.transferring.set(false);this.toast.success('Transfer started. Both ticket holders have been notified.');},error:e=>{this.toast.error(e?.error?.message??'Could not start the transfer.');this.transferring.set(false);}});
   }
-  action(ticket:AdminTicket,action:'cancel'|'complimentary'|'checkin'|'reverse-checkin'|'resend'){
+  cancelTransfer(item:TicketTransfer){
+    if(!window.confirm(`Cancel the pending transfer to ${item.recipientName}?`))return;
+    this.admin.cancelTicketTransfer(item.id).subscribe({next:value=>{this.transfers.update(items=>items.map(x=>x.id===value.id?value:x));this.toast.success('Transfer cancelled. A new transfer can now be initiated.');},error:e=>this.toast.error(e?.error?.message??'Could not cancel the transfer.')});
+  }
+  action(ticket:AdminTicket,action:'cancel'|'reactivate'|'complimentary'|'checkin'|'reverse-checkin'|'resend'){
     if(action==='cancel'&&!window.confirm(`Cancel ticket ${ticket.code}?`))return;
+    if(action==='reactivate'&&!window.confirm(`Reactivate ticket ${ticket.code}? Its previous seat will not be restored.`))return;
     this.acting.set(ticket.id);this.admin.ticketAction(ticket.id,action).subscribe({next:r=>{this.toast.success(r.message??'Ticket updated.');this.acting.set(null);this.load();},error:e=>{this.toast.error(e?.error?.message??'Action failed.');this.acting.set(null);}});
   }
 }

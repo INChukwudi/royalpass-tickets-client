@@ -17,6 +17,7 @@
             <mat-menu #ticketActions="matMenu">
               @if(t.status==='Active'&&canCheckIn){<button mat-menu-item (click)="action(t,'checkin')"><mat-icon>how_to_reg</mat-icon><span>Check in</span></button>}
               @if(t.status==='Active'&&canManageTickets){<button mat-menu-item (click)="openTransfer(t)"><mat-icon>swap_horiz</mat-icon><span>Transfer ticket</span></button><button mat-menu-item (click)="action(t,'cancel')"><mat-icon>cancel</mat-icon><span>Cancel ticket</span></button>}
+              @if(t.status==='Cancelled'&&canManageTickets){<button mat-menu-item (click)="action(t,'reactivate')"><mat-icon>restore</mat-icon><span>Reactivate ticket</span></button>}
               @if(t.status==='CheckedIn'&&canManageTickets){<button mat-menu-item (click)="action(t,'reverse-checkin')"><mat-icon>undo</mat-icon><span>Reverse check-in</span></button>}
               @if(!t.isComplimentary&&t.status!=='Cancelled'&&canManageTickets){<button mat-menu-item (click)="action(t,'complimentary')"><mat-icon>redeem</mat-icon><span>Mark complimentary</span></button>}
               @if(canManageSeats){<a mat-menu-item [routerLink]="['/admin/orders',t.reference,'seats']"><mat-icon>event_seat</mat-icon><span>Manage seats</span></a>}
@@ -43,7 +44,7 @@
           </form>
         }
         <h3>Transfer history</h3>
-        @for(item of transfers(); track item.id) {<p><strong>{{item.status}}</strong><br>{{item.currentHolderName}} &rarr; {{item.recipientName}}<br><small>{{item.recipientEmail}} &middot; Expires {{item.expiresAt|date:'MMM. d, y, h:mm a'}}</small></p>} @empty {<p>No transfers for this ticket.</p>}
+        @for(item of transfers(); track item.id) {<div class="transfer-history"><p><strong>{{item.status}}</strong><br>{{item.currentHolderName}} &rarr; {{item.recipientName}}<br><small>{{item.recipientEmail}} &middot; Expires {{item.expiresAt|date:'MMM. d, y, h:mm a'}}</small></p>@if(item.status==='Pending'&&canManageTickets){<button type="button" (click)="cancelTransfer(item)">Cancel transfer</button>}</div>} @empty {<p>No transfers for this ticket.</p>}
       </aside>
     </div>
   }
