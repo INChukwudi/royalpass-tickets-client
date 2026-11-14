@@ -4,7 +4,6 @@
       <p class="eyebrow">Operations</p>
       <h1>Email delivery</h1>
       <p>Monitor queued, accepted, delivered, failed and spam-reported transactional messages.</p>
-      <button class="transfer-resend" type="button" (click)="resendTransferSeatAccess()" [disabled]="resendingTransferAccess()">{{resendingTransferAccess()?'Queuing emails...':'Send transfer seat-access update'}}</button>
     </div>
     <form class="filters" (ngSubmit)="apply()">
       <label>Email<input name="search" [(ngModel)]="search" type="search" placeholder="Search recipient email"></label>
