@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 export class EmailDeliveriesComponent implements OnInit{
   private readonly admin=inject(AdminService);private readonly toast=inject(ToastService);
   readonly items=signal<EmailDelivery[]>([]);readonly loading=signal(true);readonly total=signal(0);
+  readonly resendingTransferAccess=signal(false);
   readonly pageSize=30;page=1;status='';search='';
   get lastPage():number{return Math.max(1,Math.ceil(this.total()/this.pageSize));}
   ngOnInit():void{this.load();}
@@ -17,4 +18,5 @@ export class EmailDeliveriesComponent implements OnInit{
   changeStatus():void{this.page=1;this.load();}
   move(delta:number):void{const next=this.page+delta;if(next<1||next>this.lastPage)return;this.page=next;this.load();}
   retry(item:EmailDelivery):void{this.admin.retryEmailDelivery(item.id).subscribe({next:()=>{this.toast.success('Email retry queued.');this.load();},error:e=>this.toast.error(e?.error?.message??'Could not queue retry.')});}
+  resendTransferSeatAccess():void{if(!window.confirm('Send corrected seat-access emails to every accepted transfer whose seat window is still open? This operation is idempotent and will not resend twice.'))return;this.resendingTransferAccess.set(true);this.admin.resendTransferSeatAccess().subscribe({next:r=>{this.resendingTransferAccess.set(false);this.toast.success(`${r.queued} transfer seat-access email${r.queued===1?'':'s'} queued; ${r.alreadyQueued} already handled.`);this.load();},error:e=>{this.resendingTransferAccess.set(false);this.toast.error(e?.error?.message??'Could not queue transfer seat-access emails.');}});}
 }

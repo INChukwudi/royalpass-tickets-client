@@ -1,0 +1,20 @@
+<main class="seat-page"><section class="seat-card">
+  <div class="brand"><span class="material-icons">event_seat</span> RoyalPass</div>
+  @if(loading()){<mat-spinner diameter="44"></mat-spinner><p>Loading available seats...</p>}
+  @else if(error()){<h1>Seat selection unavailable</h1><p class="error">{{error()}}</p>}
+  @else if(map();as seatMap){
+    <p class="eyebrow">Transferred ticket</p><h1>{{seatMap.eventTitle}}</h1>
+    <p>Select a seat for <strong>{{seatMap.ticket.code}}</strong>, or change the existing seat before the allocation window closes.</p>
+    <div class="selection"><strong>{{seatMap.ticket.seatLabel?'Current seat':'Seat awaiting selection'}}</strong><span>{{seatMap.ticket.seatLabel||'Choose an available seat below'}}</span></div>
+    <p class="map-scroll-hint">Swipe sideways to view the full auditorium</p>
+    <div class="seat-map-scroll"><div class="seat-map">
+      <div class="map-title">NUC Auditorium for the GCC 2026 HC</div><div class="console-line"><span>SOUND CONSOLE</span></div>
+      @for(seat of seatMap.seats;track seat.id){<button [class]="'seat seat--'+state(seat)" [attr.data-band]="seat.band.toLowerCase()" [attr.data-section]="seat.section" [style.left.%]="seat.x" [style.top.%]="seat.y" [title]="seat.label+' · '+seat.band" [class.seat--ineligible]="!isEligible(seat)" [disabled]="!seatMap.canCustomerChange||!isEligible(seat)||(seat.state!=='available'&&seat.ticketId!==seatMap.ticket.id)" (click)="select(seat)"><span>{{seat.number}}</span></button>}
+      <div class="stage">STAGE</div>
+    </div></div>
+    <details><summary>Use accessible seat list</summary><select [value]="selectedSeatId()" (change)="selectedSeatId.set($any($event.target).value)" [disabled]="!seatMap.canCustomerChange"><option value="">Choose a seat</option>@for(seat of seatMap.seats;track seat.id){@if(isEligible(seat)&&(seat.state==='available'||seat.ticketId===seatMap.ticket.id)){<option [value]="seat.id">{{seat.label}} · {{seat.band}}</option>}}</select></details>
+    @if(!seatMap.canCustomerChange){<p class="closed">Online seat changes closed {{seatMap.seatSelectionClosesAt|date:'MMM. d, y, h:mm a'}}. Contact the event team for help.</p>}
+    <button class="save" (click)="save()" [disabled]="saving()||!seatMap.canCustomerChange||!selectedSeatId()">{{saving()?'Saving...':'Save my selection'}}</button>
+  }
+  <a routerLink="/">Back to events</a>
+</section></main>

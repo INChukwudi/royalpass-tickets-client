@@ -14,6 +14,7 @@
       }@else if(item.status==='Accepted'){
         <span class="material-icons success">check_circle</span><h1>Transfer accepted</h1>
         <p>{{item.ticketCode}} now carries the attendee details for <strong>{{item.recipientName}}</strong>. A new ticket has been queued for email delivery.</p>
+        <a class="seat-link" [routerLink]="['/tickets/transfers',token,'seats']">Select or change your seat</a>
       }@else{<h1>Transfer {{item.status|lowercase}}</h1><p>This invitation is no longer available.</p>}
     }@else{<h1>Invitation unavailable</h1><p>{{error()}}</p>}
     <a routerLink="/">Back to events</a>

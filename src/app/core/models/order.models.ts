@@ -50,6 +50,7 @@ export interface SeatDto { id:string; label:string; section:string; row:number; 
 export interface SeatTicketDto { id:string; code:string; band:string; seatId:string|null; seatLabel:string|null; }
 export interface SeatBandSummary { band:string;total:number;available:number;assigned:number;locked:number; }
 export interface OrderSeatsResponse { orderId:string;eventId:string; reference:string; eventTitle:string;seatSelectionClosesAt:string;canCustomerChange:boolean;tickets:SeatTicketDto[];seats:SeatDto[];summary:SeatBandSummary[]; }
+export interface TransferSeatResponse { eventId:string;eventTitle:string;seatSelectionClosesAt:string;canCustomerChange:boolean;ticket:SeatTicketDto;seats:SeatDto[];summary:SeatBandSummary[]; }
 
 export interface OrderTicketDto {
   ticketId: string;

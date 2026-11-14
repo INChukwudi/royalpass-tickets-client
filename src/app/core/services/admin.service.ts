@@ -54,6 +54,7 @@ export class AdminService {
     return this.http.get<EmailDeliveryPage>(`${this.base}/email-deliveries`,{params});
   }
   retryEmailDelivery(id:string):Observable<ApiResponse<never>>{return this.http.post<ApiResponse<never>>(`${this.base}/email-deliveries/${id}/retry`,{});}
+  resendTransferSeatAccess():Observable<{eligible:number;queued:number;alreadyQueued:number}>{return this.http.post<{eligible:number;queued:number;alreadyQueued:number}>(`${this.base}/ticket-transfers/resend-seat-access`,{});}
   ticketTransfers(id:string):Observable<TicketTransfer[]>{return this.http.get<TicketTransfer[]>(`${this.base}/tickets/${id}/transfers`);}
   createTicketTransfer(id:string,recipientName:string,recipientEmail:string):Observable<TicketTransfer>{return this.http.post<TicketTransfer>(`${this.base}/tickets/${id}/transfers`,{recipientName,recipientEmail});}
   eventReferralCodes(eventId:string):Observable<ReferralCode[]>{return this.http.get<ReferralCode[]>(`${this.base}/events/${eventId}/referral-codes`);}

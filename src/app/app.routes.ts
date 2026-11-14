@@ -30,6 +30,11 @@ export const routes: Routes = [
           import('./features/public/ticket-confirmation/ticket-confirmation.component').then(m => m.TicketConfirmationComponent)
       },
       {
+        path: 'tickets/transfers/:token/seats',
+        loadComponent: () =>
+          import('./features/public/transfer-seat/transfer-seat.component').then(m => m.TransferSeatComponent)
+      },
+      {
         path: 'tickets/transfers/:token',
         loadComponent: () =>
           import('./features/public/ticket-transfer/ticket-transfer.component').then(m => m.TicketTransferComponent)

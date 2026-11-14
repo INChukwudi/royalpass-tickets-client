@@ -7,7 +7,7 @@ import {
   InitiateOrderResponse,
   VerifyPaymentRequest,
   VerifyPaymentResponse,
-  OrderLookupDto, OrderSeatsResponse, TicketTransfer
+  OrderLookupDto, OrderSeatsResponse, TicketTransfer, TransferSeatResponse
 } from '../models/order.models';
 import { ApiResponse } from '../models/api-response.model';
 
@@ -70,6 +70,14 @@ export class OrderService {
 
   acceptTransfer(token:string,recipientEmail:string):Observable<TicketTransfer> {
     return this.http.post<TicketTransfer>(`${this.base}/ticket-transfers/${encodeURIComponent(token)}/accept`,{recipientEmail});
+  }
+
+  getTransferSeat(token:string):Observable<TransferSeatResponse> {
+    return this.http.get<TransferSeatResponse>(`${this.base}/ticket-transfers/${encodeURIComponent(token)}/seats`);
+  }
+
+  saveTransferSeat(token:string,ticketId:string,seatId:string):Observable<TransferSeatResponse> {
+    return this.http.put<TransferSeatResponse>(`${this.base}/ticket-transfers/${encodeURIComponent(token)}/seats`,{selections:[{ticketId,seatId}]});
   }
 
   saveDownload(content: Blob, fileName: string): void {
