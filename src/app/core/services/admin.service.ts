@@ -28,6 +28,7 @@ export class AdminService {
   resetSeatLink(reference:string):Observable<{token:string}>{return this.http.post<{token:string}>(`${this.base}/orders/${encodeURIComponent(reference)}/seats/reset-link`,{reference});}
   seatOverviewEvents():Observable<SeatOverviewEvent[]>{return this.http.get<SeatOverviewEvent[]>(`${this.base}/seats/events`);}
   seatOverview(eventId:string):Observable<SeatOverview>{return this.http.get<SeatOverview>(`${this.base}/events/${eventId}/seats/overview`);}
+  sendSeatSelectionReminders(eventId:string):Observable<{eligibleBookings:number;ticketsAwaitingSeats:number;queued:number;alreadyQueued:number;cutoff:string}>{return this.http.post<{eligibleBookings:number;ticketsAwaitingSeats:number;queued:number;alreadyQueued:number;cutoff:string}>(`${this.base}/events/${eventId}/seat-selection-reminders`,{eventId});}
   tickets(page:number,pageSize:number,search:string,status:string,hasSeat:string=''):Observable<PagedResponse<AdminTicket>> {
     let p=new HttpParams().set('page',page).set('pageSize',pageSize);
     if(search) p=p.set('search',search); if(status) p=p.set('status',status); if(hasSeat) p=p.set('hasSeat',hasSeat);
