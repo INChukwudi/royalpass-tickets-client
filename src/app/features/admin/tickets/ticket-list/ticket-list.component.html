@@ -17,6 +17,7 @@
             <mat-menu #ticketActions="matMenu">
               @if(t.status==='Active'&&canCheckIn){<button mat-menu-item (click)="action(t,'checkin')"><mat-icon>how_to_reg</mat-icon><span>Check in</span></button>}
               @if(t.status==='Active'&&canManageTickets){<button mat-menu-item (click)="openTransfer(t)"><mat-icon>swap_horiz</mat-icon><span>Transfer ticket</span></button><button mat-menu-item (click)="action(t,'cancel')"><mat-icon>cancel</mat-icon><span>Cancel ticket</span></button>}
+              @if(t.status!=='Cancelled'&&t.status!=='CheckedIn'&&canManageTickets){<button mat-menu-item (click)="openCategory(t)"><mat-icon>upgrade</mat-icon><span>Change category</span></button>}
               @if(t.status==='Cancelled'&&canManageTickets){<button mat-menu-item (click)="action(t,'reactivate')"><mat-icon>restore</mat-icon><span>Reactivate ticket</span></button>}
               @if(t.status==='CheckedIn'&&canManageTickets){<button mat-menu-item (click)="action(t,'reverse-checkin')"><mat-icon>undo</mat-icon><span>Reverse check-in</span></button>}
               @if(!t.isComplimentary&&t.status!=='Cancelled'&&canManageTickets){<button mat-menu-item (click)="action(t,'complimentary')"><mat-icon>redeem</mat-icon><span>Mark complimentary</span></button>}
@@ -31,10 +32,34 @@
     <div class="pager"><button (click)="move(-1)" [disabled]="page===1">Previous</button><span>Page {{page | number:'1.0-0'}} of {{lastPage | number:'1.0-0'}} / {{total() | number:'1.0-0'}} tickets</span><button (click)="move(1)" [disabled]="page===lastPage">Next</button></div>
   }
   @if(selected(); as t) {
-    <div class="drawer-backdrop" (click)="selected.set(null);transferOpen.set(false)">
+    <div class="drawer-backdrop" (click)="closeDrawer()">
       <aside class="drawer" (click)="$event.stopPropagation()">
-        <button class="close" (click)="selected.set(null);transferOpen.set(false)">x</button>
-        <h2>{{t.code}}</h2><p><strong>Current attendee</strong><br>{{t.buyerName}} / {{t.buyerEmail}}</p><p><strong>Seat</strong><br>{{t.seatLabel || 'Awaiting allocation'}}</p><p><strong>Status</strong><br>{{t.status}}</p>
+        <button class="close" (click)="closeDrawer()" aria-label="Close ticket details">&times;</button>
+        <h2>{{t.code}}</h2><p><strong>Current attendee</strong><br>{{t.buyerName}} / {{t.buyerEmail}}</p><p><strong>Category</strong><br>{{t.ticketType}}</p><p><strong>Seat</strong><br>{{t.seatLabel || 'Awaiting allocation'}}</p><p><strong>Status</strong><br>{{t.status}}</p>
+        @if(categoryOpen()) {
+          <section class="category-panel">
+            <div class="category-panel__heading"><div><span class="eyebrow">Administrative override</span><h3>Change ticket category</h3></div><mat-icon>published_with_changes</mat-icon></div>
+            @if(categoryLoading()) {<p>Loading category availability...</p>}
+            @else if(categoryDetails(); as details) {
+              <div class="category-current"><span>Current category</span><strong>{{details.currentCategory}}</strong>@if(details.currentSeat){<small>Assigned seat {{details.currentSeat}} will be released.</small>}</div>
+              <label>Move guest to
+                <select [(ngModel)]="categoryTicketTypeId">
+                  <option value="">Choose a category</option>
+                  @for(option of details.options; track option.id) {
+                    <option [value]="option.id" [disabled]="!option.canMoveTo">{{option.name}} — {{option.price|currency:'NGN':'symbol-narrow':'1.0-0'}} · {{option.availableSeats}} seats available{{option.unavailableReason?' · '+option.unavailableReason:''}}</option>
+                  }
+                </select>
+              </label>
+              <label>Reason for change
+                <textarea [(ngModel)]="categoryReason" rows="3" maxlength="500" placeholder="For example: Guest upgrade approved by event manager"></textarea>
+              </label>
+              <div class="category-warning"><mat-icon>info</mat-icon><p>The original purchase amount will not change. The old seat and QR will be released, and the guest will receive an updated ticket with a secure seat-selection link.</p></div>
+              @if(details.seatSelectionClosesAt){<p class="category-cutoff"><strong>Seat-selection cutoff:</strong> {{details.seatSelectionClosesAt|date:'EEEE, MMMM d, y, h:mm a'}}</p>}
+              <div class="category-actions"><button type="button" (click)="categoryOpen.set(false)" [disabled]="categorySaving()">Cancel</button><button class="primary" type="button" (click)="changeCategory(t)" [disabled]="categorySaving()||!categoryTicketTypeId">{{categorySaving()?'Changing category...':'Confirm category change'}}</button></div>
+              @if(details.history.length){<div class="category-history"><h4>Category history</h4>@for(item of details.history;track item.id){<article><strong>{{item.previousCategory}} &rarr; {{item.newCategory}}</strong><span>{{item.changedAt|date:'MMM. d, y, h:mm a'}} by {{item.changedBy}}</span><p>{{item.reason}}</p>@if(item.releasedSeat){<small>Released seat {{item.releasedSeat}}</small>}</article>}</div>}
+            }
+          </section>
+        }
         @if(transferOpen()) {
           <form class="transfer-form" (ngSubmit)="createTransfer(t)">
             <h3>Transfer ticket</h3><p>The current holder keeps access until the recipient accepts. Both people will receive email updates.</p>

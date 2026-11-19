@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
-import { AdminOrder, AdminPermission, AdminTicket, AdminUser, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, EmailDeliveryPage, OrganizationPaymentSettings, PagedResponse, ReferralCode, ReferralUsageReport, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult, SeatOverview, SeatOverviewEvent } from '../models/admin.models';
+import { AdminOrder, AdminPermission, AdminTicket, AdminUser, ChangeTicketCategoryResponse, CheckInSearchResult, CreateManualOrderRequest, CreateManualOrderResponse, DashboardData, EmailDeliveryPage, OrganizationPaymentSettings, PagedResponse, ReferralCode, ReferralUsageReport, SaveAdminUserRequest, SaveOrganizationPaymentSettingsRequest, ScanResult, SeatOverview, SeatOverviewEvent, TicketCategoryDetails } from '../models/admin.models';
 import { OrderSeatsResponse, TicketTransfer } from '../models/order.models';
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +38,8 @@ export class AdminService {
       ? this.http.post<ApiResponse<never>>(`${this.base}/tickets/${id}/resend`,{})
       : this.http.patch<ApiResponse<never>>(`${this.base}/tickets/${id}/${action}`,{});
   }
+  ticketCategory(id:string):Observable<TicketCategoryDetails>{return this.http.get<TicketCategoryDetails>(`${this.base}/tickets/${id}/category`);}
+  changeTicketCategory(id:string,ticketTypeId:string,reason:string):Observable<ChangeTicketCategoryResponse>{return this.http.put<ChangeTicketCategoryResponse>(`${this.base}/tickets/${id}/category`,{id,ticketTypeId,reason});}
   scan(code:string):Observable<ScanResult>{return this.http.post<ScanResult>(`${environment.apiUrl}/checkin/scan`,{code});}
   checkInSearch(query:string):Observable<CheckInSearchResult[]>{return this.http.get<CheckInSearchResult[]>(`${environment.apiUrl}/checkin/search`,{params:{query}});}
   dashboard():Observable<DashboardData>{return this.http.get<DashboardData>(`${this.base}/dashboard`);}
