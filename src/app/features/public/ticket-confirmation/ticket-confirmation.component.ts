@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,6 +27,7 @@ export class TicketConfirmationComponent implements OnInit {
   error = signal<string | null>(null);
   seats = signal<OrderSeatsResponse | null>(null);
   activeTicketId = signal<string | null>(null);
+  activeTicket = computed(() => this.seats()?.tickets.find(ticket => ticket.id === this.activeTicketId()) ?? null);
   savingSeats = signal(false);
   transfers = signal<TicketTransfer[]>([]);
   transferTicketId = signal<string|null>(null);
@@ -85,18 +86,29 @@ export class TicketConfirmationComponent implements OnInit {
   }
 
   isEligible(seat:SeatDto):boolean {
-    const ticket=this.seats()?.tickets.find(item=>item.id===this.activeTicketId());
+    const ticket=this.activeTicket();
     return !!ticket&&ticket.band.toLowerCase()===seat.band.toLowerCase();
   }
+
+  isEligibleForTicket(seat:SeatDto,ticketId:string):boolean {
+    const ticket=this.seats()?.tickets.find(item=>item.id===ticketId);
+    return !!ticket&&ticket.band.toLowerCase()===seat.band.toLowerCase();
+  }
+
+  activateTicket(ticketId:string):void { this.activeTicketId.set(ticketId); }
 
   chooseSeat(ticketId:string,seatId:string):void { const seat=this.seats()?.seats.find(x=>x.id===seatId);if(seat){this.activeTicketId.set(ticketId);this.selectSeat(seat);} }
 
   findSeatsTogether():void {
-    const map=this.seats();if(!map)return;const count=map.tickets.length;
-    const available=map.seats.filter(s=>(s.state==='available'||s.state==='selected')&&this.isEligible(s)).sort((a,b)=>a.section.localeCompare(b.section)||a.row-b.row||a.number-b.number);
+    const map=this.seats();const active=this.activeTicket();if(!map||!active)return;
+    const tickets=map.tickets.filter(ticket=>ticket.band.toLowerCase()===active.band.toLowerCase());
+    const count=tickets.length;
+    const ownedIds=new Set(tickets.map(ticket=>ticket.id));
+    const available=map.seats.filter(s=>this.isEligible(s)&&(s.state==='available'||(s.state==='selected'&&!!s.ticketId&&ownedIds.has(s.ticketId)))).sort((a,b)=>a.section.localeCompare(b.section)||a.row-b.row||a.number-b.number);
     for(let i=0;i<=available.length-count;i++){const run=available.slice(i,i+count);if(run.every((s,j)=>s.section===run[0].section&&s.row===run[0].row&&(j===0||s.number===run[j-1].number+1))){
-      let updated=map;run.forEach((seat,j)=>{this.seats.set(updated);this.activeTicketId.set(updated.tickets[j].id);this.selectSeat(seat);updated=this.seats()!;});this.toast.success('Found adjacent seats for your group.');return;
-    }}this.toast.warning('No adjacent group is currently available. Your existing seats are unchanged.');
+      let updated=map;run.forEach((seat,j)=>{this.seats.set(updated);this.activeTicketId.set(tickets[j].id);this.selectSeat(seat);updated=this.seats()!;});
+      this.activeTicketId.set(active.id);this.toast.success(`Found adjacent ${active.band} seats for this group.`);return;
+    }}this.toast.warning(`No adjacent ${active.band} group is currently available. Your existing seats are unchanged.`);
   }
 
   saveSeatChanges():void {
