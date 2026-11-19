@@ -3,6 +3,8 @@ export interface TicketTypeDto {
   name: string;
   price: number;
   totalQuantity: number;
+  remainingQuantity: number;
+  isSoldOut: boolean;
   maxPerBuyer: number;
   salesStartDate: string | null;
   salesEndDate: string | null;

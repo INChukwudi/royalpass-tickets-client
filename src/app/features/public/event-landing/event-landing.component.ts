@@ -108,8 +108,7 @@ export class EventLandingComponent implements OnInit {
   setQty(ticketTypeId: string, value: number, max: number): void {
     const qty = Math.max(0, Math.min(value, max));
     if (qty > 0) {
-      // The current order model represents one ticket type per order.
-      this.cart.set({ [ticketTypeId]: qty });
+      this.cart.update(current => ({ ...current, [ticketTypeId]: qty }));
       return;
     }
 
@@ -120,7 +119,7 @@ export class EventLandingComponent implements OnInit {
     });
   }
 
-  increment(tt: TicketTypeDto): void { this.setQty(tt.id, this.getQty(tt.id) + 1, tt.maxPerBuyer); }
+  increment(tt: TicketTypeDto): void { this.setQty(tt.id, this.getQty(tt.id) + 1, Math.min(tt.maxPerBuyer, tt.remainingQuantity)); }
   decrement(tt: TicketTypeDto): void { this.setQty(tt.id, this.getQty(tt.id) - 1, tt.maxPerBuyer); }
 
   proceedToDetails(): void {
@@ -140,14 +139,12 @@ export class EventLandingComponent implements OnInit {
   placeOrder(): void {
     const items = this.cartItems();
     if (items.length === 0) return;
-    const item = items[0];
     const evt = this.selectedEvent()!;
 
     this.isSubmitting.set(true);
     this.orderService.initiateOrder({
       eventId: evt.id,
-      ticketTypeId: item.ticketType.id,
-      quantity: item.quantity,
+      items: items.map(item => ({ ticketTypeId: item.ticketType.id, quantity: item.quantity })),
       buyerName: this.buyerName,
       buyerEmail: this.buyerEmail,
       buyerPhone: this.buyerPhone,
@@ -161,8 +158,22 @@ export class EventLandingComponent implements OnInit {
         this.isSubmitting.set(false);
         const msg = publicErrorMessage(err, 'Payment could not be started right now. Please try again later.');
         this.toast.error(msg);
+        this.refreshSelectedEvent(evt.id);
       }
     });
+  }
+
+  private refreshSelectedEvent(eventId: string): void {
+    this.eventService.getEvent(eventId).subscribe({ next: fresh => {
+      this.selectedEvent.set(fresh);
+      this.events.update(events => events.map(event => event.id === fresh.id ? fresh : event));
+      const valid: Record<string, number> = {};
+      for (const type of fresh.ticketTypes) {
+        const quantity = Math.min(this.cart()[type.id] ?? 0, type.remainingQuantity, type.maxPerBuyer);
+        if (quantity > 0) valid[type.id] = quantity;
+      }
+      this.cart.set(valid);
+    }});
   }
 
   back(): void {

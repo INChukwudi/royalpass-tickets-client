@@ -76,7 +76,7 @@
                 <div class="event-card__prices">
                   @for (tt of evt.ticketTypes; track tt.id) {
                     @if (tt.isVisible) {
-                      <span class="price-chip">{{ tt.name }} — {{ tt.price | currency:'NGN':'₦':'1.0-0' }}</span>
+                      <span class="price-chip">{{ tt.name }} — {{ tt.isSoldOut ? 'Sold out' : (tt.price | currency:'NGN':'₦':'1.0-0') }}</span>
                     }
                   }
                 </div>
@@ -194,18 +194,19 @@
         <div class="tt-list">
           @for (tt of selectedEvent()!.ticketTypes; track tt.id) {
             @if (tt.isVisible) {
-              <div class="tt-row" [class.tt-row--selected]="getQty(tt.id) > 0">
+              <div class="tt-row" [class.tt-row--selected]="getQty(tt.id) > 0" [class.tt-row--sold-out]="tt.isSoldOut">
                 <div class="tt-row__info">
                   <div class="tt-row__name">{{ tt.name }}</div>
                   @if (tt.description) { <div class="tt-row__desc">{{ tt.description }}</div> }
                   <div class="tt-row__price">{{ tt.price | currency:'NGN':'₦':'1.0-0' }} per ticket</div>
+                  <div class="tt-row__availability">{{ tt.isSoldOut ? 'Sold out' : tt.remainingQuantity + ' remaining' }}</div>
                 </div>
                 <div class="tt-row__qty">
                   <button class="qty-btn" (click)="decrement(tt)" [disabled]="getQty(tt.id) === 0">
                     <span class="material-icons">remove</span>
                   </button>
                   <span class="qty-val">{{ getQty(tt.id) | number:'1.0-0' }}</span>
-                  <button class="qty-btn" (click)="increment(tt)" [disabled]="getQty(tt.id) >= tt.maxPerBuyer">
+                  <button class="qty-btn" (click)="increment(tt)" [disabled]="tt.isSoldOut || getQty(tt.id) >= tt.maxPerBuyer || getQty(tt.id) >= tt.remainingQuantity">
                     <span class="material-icons">add</span>
                   </button>
                 </div>

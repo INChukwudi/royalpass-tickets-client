@@ -1,7 +1,6 @@
 export interface InitiateOrderRequest {
   eventId: string;
-  ticketTypeId: string;
-  quantity: number;
+  items: { ticketTypeId: string; quantity: number }[];
   buyerName: string;
   buyerEmail: string;
   buyerPhone: string;
