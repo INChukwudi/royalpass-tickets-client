@@ -19,7 +19,7 @@
         }
       </div>
       <p class="camera-message" role="status" aria-live="polite">{{ cameraMessage() }}</p>
-      @if (cameraState() === 'scanning') { <p class="decode-status">Decoder checks: {{ decodeAttempts() }}</p> }
+      @if (cameraState() === 'scanning') { <p class="decode-status">ZXing checks: {{ decodeAttempts() }} · Enhanced frame checks: {{ fallbackAttempts() }}</p> }
       <div class="camera-actions">
         <button class="primary-button" type="button" (click)="startCamera()" [disabled]="cameraState()==='starting'||cameraState()==='scanning'">
           <span class="material-icons">videocam</span>{{ cameraState()==='starting' ? 'Starting...' : 'Start camera' }}
@@ -27,6 +27,8 @@
         <button class="secondary-button" type="button" (click)="stopCamera()" [disabled]="cameraState()!=='starting'&&cameraState()!=='scanning'">
           <span class="material-icons">videocam_off</span>Stop camera
         </button>
+        <input #qrImageInput type="file" accept="image/*" capture="environment" hidden (change)="decodeQrImage($event)">
+        <button class="secondary-button" type="button" (click)="qrImageInput.click()"><span class="material-icons">image_search</span>Test QR image</button>
       </div>
     </section>
 

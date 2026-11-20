@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
 import { BarcodeFormat, DecodeHintType } from '@zxing/library';
+import jsQR from 'jsqr';
 import { AdminService } from '../../../core/services/admin.service';
 import { CheckInSearchResult, CheckInTicketDetails, ScanResult } from '../../../core/models/admin.models';
 import { parseQrRegistrationCode } from './qr-payload';
@@ -39,6 +40,9 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
   private scannerReader: BrowserQRCodeReader | null = null;
   private scannerControls: IScannerControls | null = null;
   private activeMediaStream: MediaStream | null = null;
+  private fallbackTimer: ReturnType<typeof setInterval> | null = null;
+  private fallbackCanvas: HTMLCanvasElement | null = null;
+  private fallbackBusy = false;
   private lastFocusedElement: HTMLElement | null = null;
   private destroyed = false;
   private activeCredential = '';
@@ -48,6 +52,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
   readonly cameraState = signal<CameraState>('idle');
   readonly cameraMessage = signal('Select Start camera when you are ready to scan a ticket.');
   readonly decodeAttempts = signal(0);
+  readonly fallbackAttempts = signal(0);
   readonly lookupLoading = signal(false);
   readonly confirmationLoading = signal(false);
   readonly assigningSeat = signal(false);
@@ -75,6 +80,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     this.cameraMessage.set('Requesting access to the rear camera...');
     this.scannerReader ??= this.createReader();
     this.decodeAttempts.set(0);
+    this.fallbackAttempts.set(0);
     const constraints: MediaStreamConstraints = {
       audio: false,
       video: {
@@ -100,6 +106,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
       this.scannerControls = controls;
       this.activeMediaStream = video.srcObject instanceof MediaStream ? video.srcObject : null;
       await this.configureCameraTrack(this.activeMediaStream);
+      this.startFallbackDecoder(video);
       const settings = this.activeMediaStream?.getVideoTracks()[0]?.getSettings();
       const dimensions = settings?.width && settings?.height ? ` at ${settings.width}x${settings.height}` : '';
       this.cameraMessage.set(`Camera active${dimensions}. QR frame detection is running.`);
@@ -109,6 +116,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
   }
 
   stopCamera(nextState: CameraState = 'idle', message = 'Camera stopped.'): void {
+    this.stopFallbackDecoder();
     try { this.scannerControls?.stop(); } catch { /* The browser may already have closed the track. */ }
     this.scannerControls = null;
     const video = this.cameraVideo?.nativeElement;
@@ -121,6 +129,22 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
   }
 
   manualLookup(): void { this.beginLookupFromPayload(this.manualCode, false); }
+
+  async decodeQrImage(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0]; input.value = '';
+    if (!file) return;
+    this.cameraMessage.set('Checking the selected image for a QR code...');
+    const image = new Image(); const url = URL.createObjectURL(file);
+    try {
+      await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(); image.src = url; });
+      const result = await (this.scannerReader ??= this.createReader()).decodeFromImageElement(image);
+      if (this.cameraState() === 'scanning' || this.cameraState() === 'starting') this.stopCamera('detected', 'QR code found in image.');
+      this.beginLookupFromPayload(result.getText(), true);
+    } catch {
+      this.cameraMessage.set('No readable QR code was found in that image. Try a sharper, well-lit image.');
+    } finally { URL.revokeObjectURL(url); }
+  }
 
   confirmCheckIn(): void {
     const ticket = this.details();
@@ -228,6 +252,35 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
         await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as unknown as MediaTrackConstraints);
       }
     } catch { /* Focus constraints are optional and vary by mobile browser. */ }
+  }
+
+  private startFallbackDecoder(video: HTMLVideoElement): void {
+    this.stopFallbackDecoder();
+    this.fallbackCanvas = document.createElement('canvas');
+    this.fallbackTimer = setInterval(() => this.decodeFallbackFrame(video), 350);
+  }
+
+  private stopFallbackDecoder(): void {
+    if (this.fallbackTimer) clearInterval(this.fallbackTimer);
+    this.fallbackTimer = null; this.fallbackCanvas = null; this.fallbackBusy = false;
+  }
+
+  private decodeFallbackFrame(video: HTMLVideoElement): void {
+    if (this.fallbackBusy || this.cameraState() !== 'scanning' || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth) return;
+    const canvas = this.fallbackCanvas; if (!canvas) return;
+    this.fallbackBusy = true;
+    try {
+      const width = Math.min(video.videoWidth, 960);
+      const height = Math.round(video.videoHeight * (width / video.videoWidth));
+      canvas.width = width; canvas.height = height;
+      const context = canvas.getContext('2d', { willReadFrequently: true }); if (!context) return;
+      context.drawImage(video, 0, 0, width, height);
+      const frame = context.getImageData(0, 0, width, height);
+      this.fallbackAttempts.update(value => value + 1);
+      const result = jsQR(frame.data, width, height, { inversionAttempts: 'attemptBoth' });
+      if (result?.data && this.cameraState() === 'scanning') this.handleDetectedPayload(result.data);
+    } catch { /* A transient frame read must not stop the primary ZXing scanner. */ }
+    finally { this.fallbackBusy = false; }
   }
 
   private isSecureCameraContext(): boolean {
