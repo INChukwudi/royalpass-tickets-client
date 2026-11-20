@@ -19,6 +19,7 @@
         }
       </div>
       <p class="camera-message" role="status" aria-live="polite">{{ cameraMessage() }}</p>
+      @if (cameraState() === 'scanning') { <p class="decode-status">Decoder checks: {{ decodeAttempts() }}</p> }
       <div class="camera-actions">
         <button class="primary-button" type="button" (click)="startCamera()" [disabled]="cameraState()==='starting'||cameraState()==='scanning'">
           <span class="material-icons">videocam</span>{{ cameraState()==='starting' ? 'Starting...' : 'Start camera' }}

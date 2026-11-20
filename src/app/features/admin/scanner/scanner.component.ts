@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
+import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 import { AdminService } from '../../../core/services/admin.service';
 import { CheckInSearchResult, CheckInTicketDetails, ScanResult } from '../../../core/models/admin.models';
 import { parseQrRegistrationCode } from './qr-payload';
@@ -13,7 +14,16 @@ export type CameraState = 'idle' | 'starting' | 'scanning' | 'detected' | 'error
 
 export const QR_READER_FACTORY = new InjectionToken<() => BrowserQRCodeReader>('QR_READER_FACTORY', {
   providedIn: 'root',
-  factory: () => () => new BrowserQRCodeReader(undefined, { delayBetweenScanAttempts: 250 })
+  factory: () => () => {
+    const hints = new Map<DecodeHintType, unknown>();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    return new BrowserQRCodeReader(hints, {
+      delayBetweenScanAttempts: 250,
+      delayBetweenScanSuccess: 1000,
+      tryPlayVideoTimeout: 10000
+    });
+  }
 });
 
 @Component({
@@ -37,6 +47,7 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
   attendeeQuery = '';
   readonly cameraState = signal<CameraState>('idle');
   readonly cameraMessage = signal('Select Start camera when you are ready to scan a ticket.');
+  readonly decodeAttempts = signal(0);
   readonly lookupLoading = signal(false);
   readonly confirmationLoading = signal(false);
   readonly assigningSeat = signal(false);
@@ -63,13 +74,24 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
     this.cameraState.set('starting');
     this.cameraMessage.set('Requesting access to the rear camera...');
     this.scannerReader ??= this.createReader();
-    const constraints: MediaStreamConstraints = { audio: false, video: { facingMode: { ideal: 'environment' } } };
+    this.decodeAttempts.set(0);
+    const constraints: MediaStreamConstraints = {
+      audio: false,
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 30, max: 30 }
+      }
+    };
 
     try {
       this.cameraState.set('scanning');
       this.cameraMessage.set('Camera active. Hold the ticket QR code inside the frame.');
       const controls = await this.scannerReader.decodeFromConstraints(constraints, video, result => {
-        if (!result || this.cameraState() !== 'scanning') return;
+        if (this.cameraState() !== 'scanning') return;
+        this.decodeAttempts.update(value => value + 1);
+        if (!result) return;
         this.handleDetectedPayload(result.getText());
       });
       if (this.destroyed || this.cameraState() !== 'scanning') {
@@ -77,6 +99,10 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
       }
       this.scannerControls = controls;
       this.activeMediaStream = video.srcObject instanceof MediaStream ? video.srcObject : null;
+      await this.configureCameraTrack(this.activeMediaStream);
+      const settings = this.activeMediaStream?.getVideoTracks()[0]?.getSettings();
+      const dimensions = settings?.width && settings?.height ? ` at ${settings.width}x${settings.height}` : '';
+      this.cameraMessage.set(`Camera active${dimensions}. QR frame detection is running.`);
     } catch (error) {
       this.stopCamera('error', this.cameraStartError(error));
     }
@@ -191,6 +217,17 @@ export class ScannerComponent implements AfterViewInit, OnDestroy {
 
   private stopVideoTracks(video: HTMLVideoElement): void {
     if (video.srcObject instanceof MediaStream) { video.srcObject.getTracks().forEach(track => track.stop()); video.srcObject = null; }
+  }
+
+  private async configureCameraTrack(stream: MediaStream | null): Promise<void> {
+    const track = stream?.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      const capabilities = track.getCapabilities() as MediaTrackCapabilities & { focusMode?: string[] };
+      if (capabilities.focusMode?.includes('continuous')) {
+        await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as unknown as MediaTrackConstraints);
+      }
+    } catch { /* Focus constraints are optional and vary by mobile browser. */ }
   }
 
   private isSecureCameraContext(): boolean {
