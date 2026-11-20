@@ -67,11 +67,8 @@ export class EventFormComponent implements OnInit {
     this.eventService.getEvent(id).subscribe({
       next: evt => {
         this.event.set(evt);
-        const localDate = new Date(evt.eventDate);
-        const pad = (n: number) => String(n).padStart(2, '0');
-        const dateStr = `${localDate.getFullYear()}-${pad(localDate.getMonth()+1)}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(localDate.getMinutes())}`;
-        const closeDate = evt.seatSelectionClosesAt ? new Date(evt.seatSelectionClosesAt) : null;
-        const closeStr = closeDate ? `${closeDate.getFullYear()}-${pad(closeDate.getMonth()+1)}-${pad(closeDate.getDate())}T${pad(closeDate.getHours())}:${pad(closeDate.getMinutes())}` : '';
+        const dateStr = this.formatLagosInput(evt.eventDate);
+        const closeStr = evt.seatSelectionClosesAt ? this.formatLagosInput(evt.seatSelectionClosesAt) : '';
         this.form.patchValue({ ...evt, eventDate: dateStr, seatSelectionClosesAt: closeStr });
         if (evt.bannerUrl) this.bannerPreview.set(evt.bannerUrl);
         this.ticketTypes.clear();
@@ -95,8 +92,8 @@ export class EventFormComponent implements OnInit {
       description: [tt?.description ?? ''],
       isVisible: [tt?.isVisible ?? true],
       sortOrder: [tt?.sortOrder ?? 0],
-      salesStartDate: [tt?.salesStartDate ? tt.salesStartDate.slice(0,16) : ''],
-      salesEndDate: [tt?.salesEndDate ? tt.salesEndDate.slice(0,16) : ''],
+      salesStartDate: [tt?.salesStartDate ? this.formatLagosInput(tt.salesStartDate) : ''],
+      salesEndDate: [tt?.salesEndDate ? this.formatLagosInput(tt.salesEndDate) : ''],
     });
   }
 
@@ -118,8 +115,11 @@ export class EventFormComponent implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.isSaving.set(true);
     const val = this.form.value;
-    const payload = { ...val, eventDate: new Date(val.eventDate).toISOString(),
-      seatSelectionClosesAt: val.seatSelectionClosesAt ? new Date(val.seatSelectionClosesAt).toISOString() : null };
+    const payload = { ...val, eventDate: this.lagosInputToIso(val.eventDate),
+      seatSelectionClosesAt: val.seatSelectionClosesAt ? this.lagosInputToIso(val.seatSelectionClosesAt) : null,
+      ticketTypes: (val.ticketTypes ?? []).map((ticketType: any) => ({...ticketType,
+        salesStartDate: ticketType.salesStartDate ? this.lagosInputToIso(ticketType.salesStartDate) : null,
+        salesEndDate: ticketType.salesEndDate ? this.lagosInputToIso(ticketType.salesEndDate) : null})) };
 
     const save$ = this.isEditMode()
       ? this.eventService.updateEvent(this.eventId()!, payload)
@@ -144,6 +144,14 @@ export class EventFormComponent implements OnInit {
     });
   }
 
+  private formatLagosInput(value:string):string {
+    const lagos=new Date(new Date(value).getTime()+60*60*1000);
+    const pad=(n:number)=>String(n).padStart(2,'0');
+    return `${lagos.getUTCFullYear()}-${pad(lagos.getUTCMonth()+1)}-${pad(lagos.getUTCDate())}T${pad(lagos.getUTCHours())}:${pad(lagos.getUTCMinutes())}`;
+  }
+
+  private lagosInputToIso(value:string):string { return new Date(`${value}:00+01:00`).toISOString(); }
+
   private afterSave(id: string) {
     this.isSaving.set(false);
     this.toast.success(this.isEditMode() ? 'Event updated.' : 'Event created.');
@@ -163,8 +171,8 @@ export class EventFormComponent implements OnInit {
       name: val.name, price: val.price, totalQuantity: val.totalQuantity,
       maxPerBuyer: val.maxPerBuyer, description: val.description || null,
       isVisible: val.isVisible, sortOrder: val.sortOrder,
-      salesStartDate: val.salesStartDate ? new Date(val.salesStartDate).toISOString() : null,
-      salesEndDate: val.salesEndDate ? new Date(val.salesEndDate).toISOString() : null,
+      salesStartDate: val.salesStartDate ? this.lagosInputToIso(val.salesStartDate) : null,
+      salesEndDate: val.salesEndDate ? this.lagosInputToIso(val.salesEndDate) : null,
     };
     const save$ = val.id
       ? this.eventService.updateTicketType(val.id, payload)

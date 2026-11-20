@@ -127,6 +127,8 @@ export class TicketConfirmationComponent implements OnInit {
     }});
   }
 
+  refreshSeats():void { const result=this.result();if(result)this.loadSeats(result); }
+
   qrUrl(path: string): string {
     return `${this.apiBase}${path}`;
   }

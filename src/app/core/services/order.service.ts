@@ -30,7 +30,7 @@ export class OrderService {
   }
 
   getSeats(reference:string, token:string):Observable<OrderSeatsResponse> {
-    return this.http.get<OrderSeatsResponse>(`${this.base}/orders/${encodeURIComponent(reference)}/seats`, { params:{token} });
+    return this.http.get<OrderSeatsResponse>(`${this.base}/orders/${encodeURIComponent(reference)}/seats`, { params:{token,_ts:Date.now().toString()} });
   }
 
   saveSeats(reference:string, token:string, buyerEmail:string, selections:{ticketId:string;seatId:string}[]):Observable<OrderSeatsResponse> {
@@ -73,7 +73,7 @@ export class OrderService {
   }
 
   getTransferSeat(token:string):Observable<TransferSeatResponse> {
-    return this.http.get<TransferSeatResponse>(`${this.base}/ticket-transfers/${encodeURIComponent(token)}/seats`);
+    return this.http.get<TransferSeatResponse>(`${this.base}/ticket-transfers/${encodeURIComponent(token)}/seats`,{params:{_ts:Date.now().toString()}});
   }
 
   saveTransferSeat(token:string,ticketId:string,seatId:string):Observable<TransferSeatResponse> {

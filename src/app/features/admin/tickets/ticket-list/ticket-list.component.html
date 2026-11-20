@@ -54,7 +54,7 @@
                 <textarea [(ngModel)]="categoryReason" rows="3" maxlength="500" placeholder="For example: Guest upgrade approved by event manager"></textarea>
               </label>
               <div class="category-warning"><mat-icon>info</mat-icon><p>The original purchase amount will not change. The old seat and QR will be released, and the guest will receive an updated ticket with a secure seat-selection link.</p></div>
-              @if(details.seatSelectionClosesAt){<p class="category-cutoff"><strong>Seat-selection cutoff:</strong> {{details.seatSelectionClosesAt|date:'EEEE, MMMM d, y, h:mm a'}}</p>}
+              @if(details.seatSelectionClosesAt){<p class="category-cutoff"><strong>Seat-selection cutoff:</strong> {{details.seatSelectionClosesAt|date:'EEEE, MMMM d, y, h:mm a':'+0100'}} WAT</p>}
               <div class="category-actions"><button type="button" (click)="categoryOpen.set(false)" [disabled]="categorySaving()">Cancel</button><button class="primary" type="button" (click)="changeCategory(t)" [disabled]="categorySaving()||!categoryTicketTypeId">{{categorySaving()?'Changing category...':'Confirm category change'}}</button></div>
               @if(details.history.length){<div class="category-history"><h4>Category history</h4>@for(item of details.history;track item.id){<article><strong>{{item.previousCategory}} &rarr; {{item.newCategory}}</strong><span>{{item.changedAt|date:'MMM. d, y, h:mm a'}} by {{item.changedBy}}</span><p>{{item.reason}}</p>@if(item.releasedSeat){<small>Released seat {{item.releasedSeat}}</small>}</article>}</div>}
             }

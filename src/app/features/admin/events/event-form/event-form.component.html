@@ -106,7 +106,7 @@
               @if (hasError(getCtrl('title'), 'required')) { <span class="ef-error">Required</span> }
             </div>
             <div class="ef-field">
-              <label>Date & Time *</label>
+              <label>Date & Time * (WAT)</label>
               <input formControlName="eventDate" type="datetime-local" [class.is-invalid]="hasError(getCtrl('eventDate'), 'required')">
               @if (hasError(getCtrl('eventDate'), 'required')) { <span class="ef-error">Required</span> }
             </div>
@@ -116,9 +116,9 @@
               @if (hasError(getCtrl('venue'), 'required')) { <span class="ef-error">Required</span> }
             </div>
             <div class="ef-field">
-              <label>Customer seat changes close</label>
+              <label>Customer seat changes close (WAT)</label>
               <input formControlName="seatSelectionClosesAt" type="datetime-local">
-              <small>Defaults to 24 hours before the event.</small>
+              <small>Entered and displayed in West Africa Time. Defaults to 24 hours before the event.</small>
             </div>
             <div class="ef-field ef-field--full">
               <label>Description *</label>
