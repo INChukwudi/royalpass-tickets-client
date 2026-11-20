@@ -1,44 +1,118 @@
-<div class="scanner-page">
-  <h1>Gate Scanner</h1>
+<main class="scanner-page">
+  <header class="page-heading">
+    <span class="eyebrow">Event admission</span>
+    <h1>Gate check-in</h1>
+    <p>Scan a ticket, review the attendee, and confirm admission.</p>
+  </header>
+
   <div class="scanner-grid">
-    <section class="panel">
-      <h2>Camera</h2>
-      <div id="gate-qr-reader" class="qr-reader" aria-label="Ticket QR code camera"></div>
-      <p class="camera-message">{{cameraMessage()}}</p>
-      <button type="button" (click)="toggleCamera()">{{cameraRunning()?'Stop camera':'Start camera'}}</button>
+    <section class="panel camera-panel" aria-labelledby="camera-title">
+      <div class="panel-heading">
+        <div><h2 id="camera-title">QR camera</h2><p>Camera access starts only when you request it.</p></div>
+        <span class="camera-state" [attr.data-state]="cameraState()">{{ cameraState() }}</span>
+      </div>
+      <div class="camera-preview" [class.camera-preview--active]="cameraState()==='scanning'">
+        <video #cameraVideo autoplay muted playsinline aria-label="Live ticket QR camera preview"></video>
+        <div class="scan-frame" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        @if (cameraState() !== 'scanning') {
+          <div class="camera-placeholder" aria-hidden="true"><span class="material-icons">qr_code_scanner</span></div>
+        }
+      </div>
+      <p class="camera-message" role="status" aria-live="polite">{{ cameraMessage() }}</p>
+      <div class="camera-actions">
+        <button class="primary-button" type="button" (click)="startCamera()" [disabled]="cameraState()==='starting'||cameraState()==='scanning'">
+          <span class="material-icons">videocam</span>{{ cameraState()==='starting' ? 'Starting...' : 'Start camera' }}
+        </button>
+        <button class="secondary-button" type="button" (click)="stopCamera()" [disabled]="cameraState()!=='starting'&&cameraState()!=='scanning'">
+          <span class="material-icons">videocam_off</span>Stop camera
+        </button>
+      </div>
     </section>
 
-    <section class="panel">
-      <h2>Enter ticket number</h2>
-      <p class="entry-help">Use the visible number printed below the QR code, for example <strong>TKT-ABC123456789</strong>.</p>
-      <div class="entry"><input [(ngModel)]="code" (keydown.enter)="prepare()" placeholder="TKT-XXXXXXXXXXXX" autocomplete="off" autocapitalize="characters"><button type="button" (click)="prepare()" [disabled]="processing()">{{processing()?'Checking…':'Find ticket'}}</button></div>
+    <section class="panel lookup-panel" aria-labelledby="manual-title">
+      <h2 id="manual-title">Manual ticket lookup</h2>
+      <p>Enter the visible ticket number or paste any supported QR payload.</p>
+      <form class="lookup-form" (ngSubmit)="manualLookup()">
+        <label for="manual-code">Ticket or registration code</label>
+        <div class="control-row">
+          <input id="manual-code" name="manualCode" [(ngModel)]="manualCode" placeholder="TKT-XXXXXXXXXXXX" autocomplete="off" autocapitalize="characters">
+          <button class="primary-button" type="submit" [disabled]="lookupLoading()||confirmationLoading()">
+            {{ lookupLoading() ? 'Looking up...' : 'Lookup' }}
+          </button>
+        </div>
+      </form>
 
-      @if(details();as ticket){
-        <article class="ticket-preview">
-          <div class="preview-heading"><span class="material-icons">person</span><div><small>Ticket owner</small><h3>{{ticket.guestName}}</h3><p>{{ticket.guestEmail}}</p></div></div>
-          <dl><div><dt>Ticket</dt><dd>{{ticket.ticketCode}}</dd></div><div><dt>Event</dt><dd>{{ticket.eventTitle}}</dd></div><div><dt>Category</dt><dd>{{ticket.ticketType}}</dd></div><div><dt>Status</dt><dd>{{ticket.status}}</dd></div><div><dt>Seat</dt><dd>{{ticket.seatLabel||'Not assigned'}}</dd></div></dl>
-          <p class="preview-message">{{ticket.message}}</p>
-          @if(ticket.canCheckIn&&ticket.seatLabel){<button class="check-in" type="button" (click)="checkIn()" [disabled]="processing()"><span class="material-icons">how_to_reg</span>{{processing()?'Checking in…':'Check in guest'}}</button>}
-          @else if(ticket.canCheckIn){<button type="button" (click)="seatModalOpen.set(true)">Assign seat before check-in</button>}
-        </article>
-      }
-
-      @if(result();as r){<div class="result" [class.admit]="r.decision==='admitted'" [class.warn]="r.decision==='already_used'"><h3>{{r.decision.replace('_',' ')}}</h3><p>{{r.message}}</p>@if(r.guestName){<strong>{{r.guestName}}</strong><span>{{r.eventTitle}} / {{r.ticketType}}</span><h2>SEAT {{r.seatLabel||'UNASSIGNED'}}</h2>}</div>}
-
-      <h2>Find attendee</h2>
-      <div class="entry"><input [(ngModel)]="query" (keydown.enter)="search()" placeholder="Name, phone or TKT number"><button type="button" (click)="search()">Search</button></div>
-      @for(t of matches();track t.ticketId){<div class="match"><span><strong>{{t.guestName}}</strong>{{t.ticketCode}} / {{t.status}} / Seat {{t.seatLabel||'unassigned'}}</span><button type="button" (click)="review(t)">Review</button></div>}
+      <div class="attendee-search">
+        <h2>Find attendee</h2>
+        <p>Search by name, phone number, or ticket number.</p>
+        <form class="control-row" (ngSubmit)="searchAttendees()">
+          <input name="attendeeQuery" [(ngModel)]="attendeeQuery" placeholder="Name, phone or TKT number" autocomplete="off">
+          <button class="secondary-button" type="submit" [disabled]="searchLoading()">{{ searchLoading() ? 'Searching...' : 'Search' }}</button>
+        </form>
+        <div class="search-results" aria-live="polite">
+          @for (ticket of matches(); track ticket.ticketId) {
+            <article class="search-result">
+              <div><strong>{{ ticket.guestName }}</strong><span>{{ ticket.ticketCode }} · {{ ticket.ticketType }}</span><small>{{ ticket.status }} · Seat {{ ticket.seatLabel || 'unassigned' }}</small></div>
+              <button type="button" (click)="reviewSearchResult(ticket)">Review</button>
+            </article>
+          }
+        </div>
+      </div>
     </section>
   </div>
-</div>
+</main>
 
-@if(seatModalOpen()&&details();as ticket){
-  <div class="modal-backdrop" role="presentation">
-    <section class="seat-modal" role="dialog" aria-modal="true" aria-labelledby="seat-modal-title">
-      <span class="material-icons modal-icon">event_seat</span>
-      <h2 id="seat-modal-title">Seat required before check-in</h2>
-      <p><strong>{{ticket.guestName}}</strong> does not yet have a seat. Assign the next available seat in the <strong>{{ticket.ticketType}}</strong> category.</p>
-      <div class="modal-actions"><button type="button" class="secondary" (click)="seatModalOpen.set(false)" [disabled]="assigningSeat()">Cancel</button><button type="button" (click)="assignSeat()" [disabled]="assigningSeat()">{{assigningSeat()?'Assigning…':'Assign next available seat'}}</button></div>
+@if (modalOpen()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <section class="review-modal" role="dialog" aria-modal="true" aria-labelledby="checkin-modal-title" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div><span class="eyebrow">Operator review</span><h2 #modalHeading id="checkin-modal-title" tabindex="-1">Attendee check-in</h2></div>
+        <button class="icon-button" type="button" aria-label="Close attendee review" (click)="closeModal()" [disabled]="confirmationLoading()"><span class="material-icons">close</span></button>
+      </header>
+
+      @if (lookupLoading()) {
+        <div class="modal-loading" role="status"><span class="spinner" aria-hidden="true"></span><p>Looking up attendee registration...</p></div>
+      } @else if (details(); as ticket) {
+        <div class="identity-card">
+          <div class="avatar-fallback" aria-hidden="true"><span class="material-icons">person</span></div>
+          <div><span>Ticket owner</span><h3>{{ ticket.guestName || 'Name unavailable' }}</h3><p>{{ ticket.guestEmail || 'Email unavailable' }}</p></div>
+          <span class="attendance-badge" [class.attendance-badge--checked]="!ticket.canCheckIn">{{ ticket.canCheckIn ? 'Not checked in' : ticket.status }}</span>
+        </div>
+
+        <dl class="details-grid">
+          <div><dt>Event</dt><dd>{{ ticket.eventTitle || 'Unavailable' }}</dd></div>
+          <div><dt>Registration code</dt><dd>{{ ticket.ticketCode || manualCode }}</dd></div>
+          <div><dt>Ticket category</dt><dd>{{ ticket.ticketType || 'Unavailable' }}</dd></div>
+          <div><dt>Seat</dt><dd>{{ ticket.seatLabel || 'Not assigned' }}</dd></div>
+          @if (ticket.checkedInAt) { <div class="details-grid__wide"><dt>Checked in</dt><dd>{{ ticket.checkedInAt | date:'medium' }}</dd></div> }
+        </dl>
+
+        <p class="ticket-message" [class.ticket-message--success]="checkInResult()?.admitted">{{ checkInResult()?.message || ticket.message }}</p>
+        @if (modalError(); as error) { <div class="modal-error" role="alert">{{ error }}</div> }
+
+        <footer class="modal-actions">
+          @if (checkInResult()?.admitted) {
+            <button class="primary-button" type="button" (click)="scanNext()"><span class="material-icons">qr_code_scanner</span>Scan next attendee</button>
+          } @else if (ticket.canCheckIn && !ticket.seatLabel) {
+            <button class="secondary-button" type="button" (click)="closeModal()" [disabled]="assigningSeat()">Cancel</button>
+            <button class="primary-button" type="button" (click)="assignSeat()" [disabled]="assigningSeat()">{{ assigningSeat() ? 'Assigning seat...' : 'Assign next available seat' }}</button>
+          } @else if (ticket.canCheckIn) {
+            <button class="secondary-button" type="button" (click)="closeModal()" [disabled]="confirmationLoading()">Cancel</button>
+            <button class="confirm-button" type="button" (click)="confirmCheckIn()" [disabled]="confirmationLoading()">
+              <span class="material-icons">how_to_reg</span>{{ confirmationLoading() ? 'Checking in...' : 'Confirm check-in' }}
+            </button>
+          } @else {
+            <button class="primary-button" type="button" (click)="scanNext()">Scan next attendee</button>
+          }
+        </footer>
+      } @else {
+        <div class="empty-result">
+          <span class="material-icons">error_outline</span>
+          <h3>Registration not available</h3>
+          <div class="modal-error" role="alert">{{ modalError() }}</div>
+          <button class="primary-button" type="button" (click)="scanNext()">Try another ticket</button>
+        </div>
+      }
     </section>
   </div>
 }

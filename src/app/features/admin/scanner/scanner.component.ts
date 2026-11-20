@@ -1,90 +1,244 @@
-import { AfterViewInit, Component, NgZone, OnDestroy, inject, signal } from '@angular/core';
+import {
+  AfterViewInit, Component, ElementRef, HostListener, InjectionToken, OnDestroy, ViewChild, inject, signal
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
-import { Html5Qrcode, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { HttpErrorResponse } from '@angular/common/http';
+import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
 import { AdminService } from '../../../core/services/admin.service';
 import { CheckInSearchResult, CheckInTicketDetails, ScanResult } from '../../../core/models/admin.models';
+import { parseQrRegistrationCode } from './qr-payload';
 
-@Component({selector:'app-scanner',standalone:true,imports:[CommonModule,FormsModule,MatIconModule],templateUrl:'./scanner.component.html',styleUrl:'./scanner.component.scss'})
+export type CameraState = 'idle' | 'starting' | 'scanning' | 'detected' | 'error';
+
+export const QR_READER_FACTORY = new InjectionToken<() => BrowserQRCodeReader>('QR_READER_FACTORY', {
+  providedIn: 'root',
+  factory: () => () => new BrowserQRCodeReader(undefined, { delayBetweenScanAttempts: 250 })
+});
+
+@Component({
+  selector: 'app-scanner', standalone: true, imports: [CommonModule, FormsModule],
+  templateUrl: './scanner.component.html', styleUrl: './scanner.component.scss'
+})
 export class ScannerComponent implements AfterViewInit, OnDestroy {
-  private readonly admin=inject(AdminService);
-  private readonly zone=inject(NgZone);
-  private scanner:Html5Qrcode|null=null;private cameraOperation:Promise<void>|null=null;private destroyed=false;
-  private lastCameraValue='';private lastCameraScanAt=0;private preparedCredential='';
-  cameraEnabled=true;code='';query='';
-  readonly processing=signal(false);readonly assigningSeat=signal(false);readonly seatModalOpen=signal(false);
-  readonly cameraRunning=signal(false);
-  readonly result=signal<ScanResult|null>(null);readonly details=signal<CheckInTicketDetails|null>(null);
-  readonly matches=signal<CheckInSearchResult[]>([]);readonly cameraMessage=signal('Point the camera at the ticket QR code.');
+  private readonly admin = inject(AdminService);
+  private readonly createReader = inject(QR_READER_FACTORY);
+  @ViewChild('cameraVideo') private cameraVideo?: ElementRef<HTMLVideoElement>;
+  @ViewChild('modalHeading') private modalHeading?: ElementRef<HTMLElement>;
 
-  ngAfterViewInit():void{void this.startCamera();}
-  ngOnDestroy():void{this.destroyed=true;void this.stopCamera();}
+  private scannerReader: BrowserQRCodeReader | null = null;
+  private scannerControls: IScannerControls | null = null;
+  private activeMediaStream: MediaStream | null = null;
+  private lastFocusedElement: HTMLElement | null = null;
+  private destroyed = false;
+  private activeCredential = '';
 
-  scanSuccess(value:string):void{const now=Date.now();if(this.processing()||(value===this.lastCameraValue&&now-this.lastCameraScanAt<5000))return;this.lastCameraValue=value;this.lastCameraScanAt=now;this.cameraMessage.set('QR code detected. Looking up ticket...');this.prepare(value);}
+  manualCode = '';
+  attendeeQuery = '';
+  readonly cameraState = signal<CameraState>('idle');
+  readonly cameraMessage = signal('Select Start camera when you are ready to scan a ticket.');
+  readonly lookupLoading = signal(false);
+  readonly confirmationLoading = signal(false);
+  readonly assigningSeat = signal(false);
+  readonly modalOpen = signal(false);
+  readonly modalError = signal<string | null>(null);
+  readonly details = signal<CheckInTicketDetails | null>(null);
+  readonly checkInResult = signal<ScanResult | null>(null);
+  readonly matches = signal<CheckInSearchResult[]>([]);
+  readonly searchLoading = signal(false);
 
-  async toggleCamera():Promise<void>{if(this.cameraRunning()){this.cameraEnabled=false;await this.stopCamera();return;}this.cameraEnabled=true;await this.startCamera();}
+  ngAfterViewInit(): void { /* Camera access is intentionally user initiated. */ }
+  ngOnDestroy(): void { this.destroyed = true; this.stopCamera('idle', 'Camera stopped.'); }
 
-  private async startCamera():Promise<void>{
-    if(this.destroyed||!this.cameraEnabled||this.cameraRunning()||this.cameraOperation)return;
-    this.cameraMessage.set('Starting the rear camera...');
-    this.scanner??=new Html5Qrcode('gate-qr-reader',{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],useBarCodeDetectorIfSupported:true,verbose:false});
-    this.cameraOperation=this.startWithRearCamera().finally(()=>this.cameraOperation=null);
-    await this.cameraOperation;
-  }
-
-  private async startWithRearCamera():Promise<void>{
-    if(!this.scanner)return;
-    const config={fps:12,qrbox:(width:number,height:number)=>{const size=Math.max(180,Math.min(360,Math.floor(Math.min(width,height)*.72)));return {width:size,height:size};},disableFlip:false};
-    const onSuccess=(text:string)=>this.zone.run(()=>this.scanSuccess(text));
-    try{
-      await this.scanner.start({facingMode:{ideal:'environment'}},config,onSuccess,()=>undefined);
-    }catch(firstError){
-      try{
-        const cameras=await Html5Qrcode.getCameras();
-        if(!cameras.length)throw firstError;
-        const rear=cameras.find(camera=>/back|rear|environment/i.test(camera.label))??cameras.at(-1)!;
-        await this.scanner.start(rear.id,config,onSuccess,()=>undefined);
-      }catch(error){this.zone.run(()=>this.cameraMessage.set(this.cameraFailureMessage(error)));return;}
+  async startCamera(): Promise<void> {
+    if (this.cameraState() === 'starting' || this.cameraState() === 'scanning') return;
+    if (!this.isSecureCameraContext()) { this.setCameraError('Camera access requires HTTPS or localhost.'); return; }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      this.setCameraError('This browser does not support camera scanning. Use the manual ticket-number lookup.'); return;
     }
-    if(this.destroyed||!this.cameraEnabled){await this.scanner.stop().catch(()=>undefined);return;}
-    this.zone.run(()=>{this.cameraRunning.set(true);this.cameraMessage.set('Camera ready. Hold the QR code inside the square.');});
+    const video = this.cameraVideo?.nativeElement;
+    if (!video) { this.setCameraError('The camera preview is unavailable. Reload the page and try again.'); return; }
+
+    this.stopCamera('idle', 'Preparing camera...');
+    this.cameraState.set('starting');
+    this.cameraMessage.set('Requesting access to the rear camera...');
+    this.scannerReader ??= this.createReader();
+    const constraints: MediaStreamConstraints = { audio: false, video: { facingMode: { ideal: 'environment' } } };
+
+    try {
+      this.cameraState.set('scanning');
+      this.cameraMessage.set('Camera active. Hold the ticket QR code inside the frame.');
+      const controls = await this.scannerReader.decodeFromConstraints(constraints, video, result => {
+        if (!result || this.cameraState() !== 'scanning') return;
+        this.handleDetectedPayload(result.getText());
+      });
+      if (this.destroyed || this.cameraState() !== 'scanning') {
+        controls.stop(); this.stopVideoTracks(video); return;
+      }
+      this.scannerControls = controls;
+      this.activeMediaStream = video.srcObject instanceof MediaStream ? video.srcObject : null;
+    } catch (error) {
+      this.stopCamera('error', this.cameraStartError(error));
+    }
   }
 
-  private async stopCamera():Promise<void>{
-    if(this.cameraOperation)await this.cameraOperation.catch(()=>undefined);
-    const scanner=this.scanner;if(!scanner)return;
-    try{if(scanner.getState()===Html5QrcodeScannerState.SCANNING||scanner.getState()===Html5QrcodeScannerState.PAUSED)await scanner.stop();}catch{/** Camera may already have been released by the browser. */}
-    this.cameraRunning.set(false);
-    if(!this.destroyed)this.cameraMessage.set('Camera stopped.');
+  stopCamera(nextState: CameraState = 'idle', message = 'Camera stopped.'): void {
+    try { this.scannerControls?.stop(); } catch { /* The browser may already have closed the track. */ }
+    this.scannerControls = null;
+    const video = this.cameraVideo?.nativeElement;
+    const stream = video?.srcObject instanceof MediaStream ? video.srcObject : this.activeMediaStream;
+    stream?.getTracks().forEach(track => track.stop());
+    this.activeMediaStream = null;
+    if (video) video.srcObject = null;
+    this.cameraState.set(nextState);
+    this.cameraMessage.set(message);
   }
 
-  private cameraFailureMessage(error:unknown):string{
-    const message=String(error).toLowerCase();
-    if(message.includes('permission')||message.includes('notallowed'))return 'Camera permission was denied. Allow camera access in the browser and start the camera again.';
-    if(message.includes('secure')||(!window.isSecureContext&&location.hostname!=='localhost'))return 'Camera scanning requires a secure HTTPS connection.';
-    return 'The camera could not be started. Check that another app is not using it, then try again.';
+  manualLookup(): void { this.beginLookupFromPayload(this.manualCode, false); }
+
+  confirmCheckIn(): void {
+    const ticket = this.details();
+    if (!ticket?.canCheckIn || !ticket.seatLabel || this.confirmationLoading()) return;
+    this.confirmationLoading.set(true); this.modalError.set(null);
+    this.admin.scan(ticket.ticketCode ?? this.activeCredential).subscribe({
+      next: result => {
+        this.confirmationLoading.set(false); this.checkInResult.set(result);
+        const attended = result.admitted || result.decision === 'already_used';
+        this.details.update(current => current ? {
+          ...current, status: attended ? 'CheckedIn' : current.status,
+          checkedInAt: result.checkedInAt ?? (result.admitted ? new Date().toISOString() : current.checkedInAt),
+          canCheckIn: !attended
+        } : current);
+        if (!result.admitted) this.modalError.set(result.message);
+      },
+      error: error => { this.confirmationLoading.set(false); this.modalError.set(checkInErrorMessage(error, 'Check-in could not be completed.')); }
+    });
   }
 
-  prepare(value=this.code):void{
-    const credential=value.trim();if(!credential||this.processing())return;
-    this.processing.set(true);this.result.set(null);
-    this.admin.prepareCheckIn(credential).subscribe({next:ticket=>{this.processing.set(false);this.code='';this.details.set(ticket.found?ticket:null);this.preparedCredential=credential;if(!ticket.found){this.result.set(this.invalidResult(ticket.message,credential));this.cameraMessage.set('Ticket not found. Ready to scan again.');return;}this.cameraMessage.set('Ticket found. Confirm the guest details before check-in.');this.seatModalOpen.set(ticket.canCheckIn&&!ticket.seatLabel);},error:e=>{this.processing.set(false);this.result.set(this.invalidResult(e?.error?.message??'Ticket lookup failed.',credential));this.cameraMessage.set('Lookup failed. Ready to try again.');}});
+  assignSeat(): void {
+    const ticket = this.details();
+    if (!ticket?.ticketId || this.assigningSeat()) return;
+    this.assigningSeat.set(true); this.modalError.set(null);
+    this.admin.assignCheckInSeat(ticket.ticketId).subscribe({
+      next: updated => { this.assigningSeat.set(false); this.details.set(updated); },
+      error: error => { this.assigningSeat.set(false); this.modalError.set(checkInErrorMessage(error, 'No seat could be assigned.')); }
+    });
   }
 
-  checkIn():void{
-    const ticket=this.details();if(!ticket?.canCheckIn||!ticket.seatLabel||this.processing())return;
-    this.processing.set(true);
-    this.admin.scan(ticket.ticketCode??this.preparedCredential).subscribe({next:r=>{this.result.set(r);this.processing.set(false);this.details.set({...ticket,status:r.admitted?'CheckedIn':ticket.status,checkedInAt:r.checkedInAt,canCheckIn:!r.admitted&&r.decision!=='already_used'});this.cameraMessage.set('Ready to scan the next ticket.');},error:e=>{this.result.set(this.invalidResult(e?.error?.message??'Check-in failed.',ticket.ticketCode??''));this.processing.set(false);}});
+  closeModal(): void {
+    if (this.confirmationLoading()) return;
+    this.modalOpen.set(false); this.lookupLoading.set(false); this.details.set(null); this.checkInResult.set(null);
+    this.modalError.set(null); this.cameraState.set('idle');
+    this.cameraMessage.set('Select Start camera when you are ready to scan a ticket.');
+    const target = this.lastFocusedElement; this.lastFocusedElement = null;
+    setTimeout(() => target?.focus());
   }
 
-  assignSeat():void{
-    const ticket=this.details();if(!ticket?.ticketId||this.assigningSeat())return;
-    this.assigningSeat.set(true);
-    this.admin.assignCheckInSeat(ticket.ticketId).subscribe({next:updated=>{this.details.set(updated);this.assigningSeat.set(false);this.seatModalOpen.set(false);},error:e=>{this.assigningSeat.set(false);this.result.set(this.invalidResult(e?.error?.message??'No seat could be assigned.',ticket.ticketCode??''));}});
+  scanNext(): void { this.manualCode = ''; this.closeModal(); }
+
+  searchAttendees(): void {
+    const query = this.attendeeQuery.trim();
+    if (!query || this.searchLoading()) return;
+    this.searchLoading.set(true);
+    this.admin.checkInSearch(query).subscribe({
+      next: matches => { this.matches.set(matches); this.searchLoading.set(false); },
+      error: () => { this.matches.set([]); this.searchLoading.set(false); }
+    });
   }
 
-  search():void{if(!this.query.trim())return;this.admin.checkInSearch(this.query.trim()).subscribe(r=>this.matches.set(r));}
-  review(ticket:CheckInSearchResult):void{this.prepare(ticket.ticketCode);}
-  private invalidResult(message:string,code:string):ScanResult{return {admitted:false,decision:'invalid',message,ticketId:null,ticketCode:code,guestName:null,eventTitle:null,ticketType:null,checkedInAt:null,seatLabel:null};}
+  reviewSearchResult(ticket: CheckInSearchResult): void { this.beginLookupFromPayload(ticket.ticketCode, false); }
+  @HostListener('document:keydown.escape')
+  handleEscape(): void { if (this.modalOpen() && !this.confirmationLoading()) this.closeModal(); }
+
+  private handleDetectedPayload(payload: string): void {
+    if (this.cameraState() !== 'scanning') return;
+    this.cameraState.set('detected');
+    this.stopCamera('detected', 'QR code detected. Looking up the ticket...');
+    this.beginLookupFromPayload(payload, true);
+  }
+
+  private beginLookupFromPayload(payload: string, cameraDetection: boolean): void {
+    if (this.lookupLoading() || this.confirmationLoading()) return;
+    const credential = parseQrRegistrationCode(payload);
+    if (!credential) {
+      if (cameraDetection) this.stopCamera('error', 'The QR code did not contain a usable ticket number.');
+      this.details.set(null); this.checkInResult.set(null); this.openModal();
+      this.modalError.set('The QR code or manual value does not contain a usable ticket number.'); return;
+    }
+    if (!cameraDetection && (this.cameraState() === 'scanning' || this.cameraState() === 'starting')) {
+      this.stopCamera('detected', 'Manual lookup started. Camera stopped.');
+    }
+    this.activeCredential = credential; this.manualCode = credential; this.lookupTicket(credential);
+  }
+
+  private lookupTicket(credential: string): void {
+    this.openModal(); this.lookupLoading.set(true); this.modalError.set(null); this.details.set(null);
+    this.checkInResult.set(null);
+    this.admin.prepareCheckIn(credential).subscribe({
+      next: ticket => {
+        this.lookupLoading.set(false);
+        if (!ticket.found) { this.modalError.set(ticket.message || 'No matching attendee registration was found.'); return; }
+        this.details.set(ticket);
+      },
+      error: error => { this.lookupLoading.set(false); this.modalError.set(checkInErrorMessage(error, 'Ticket lookup failed. Please try again.')); }
+    });
+  }
+
+  private openModal(): void {
+    if (!this.modalOpen()) this.lastFocusedElement = document.activeElement as HTMLElement | null;
+    this.modalOpen.set(true); setTimeout(() => this.modalHeading?.nativeElement.focus());
+  }
+
+  private stopVideoTracks(video: HTMLVideoElement): void {
+    if (video.srcObject instanceof MediaStream) { video.srcObject.getTracks().forEach(track => track.stop()); video.srcObject = null; }
+  }
+
+  private isSecureCameraContext(): boolean {
+    return window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  }
+
+  private setCameraError(message: string): void { this.stopCamera('error', message); }
+
+  private cameraStartError(error: unknown): string {
+    const name = typeof error === 'object' && error && 'name' in error ? String(error.name) : '';
+    if (name === 'NotAllowedError' || name === 'SecurityError') return 'Camera permission was denied. Allow access in your browser settings and try again.';
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') return 'No camera was found on this device.';
+    if (name === 'NotReadableError' || name === 'TrackStartError') return 'The camera is already in use or could not be started.';
+    return 'The camera could not be started. Use manual lookup or try another browser.';
+  }
+}
+
+export function checkInErrorMessage(error: unknown, fallback: string): string {
+  const response = error as HttpErrorResponse; const body = response?.error;
+  const message = stringProperty(body, 'message'); if (message) return message;
+  const detail = stringProperty(body, 'detail'); if (detail) return detail;
+  const validation = firstValidationError(body?.errors); if (validation) return validation;
+  const title = stringProperty(body, 'title'); if (title) return title;
+  if (response?.status === 0) return 'The check-in service could not be reached. Check the network connection and try again.';
+  if (response?.status === 400) return 'The ticket number or QR code is invalid.';
+  if (response?.status === 401) return 'Your session has expired. Sign in again to continue.';
+  if (response?.status === 403) return 'You do not have permission to check in attendees.';
+  if (response?.status === 404) return 'No matching attendee registration was found.';
+  if (response?.status === 409) return 'This attendee has already been checked in or the ticket state has changed.';
+  if (response?.status >= 500) return 'The check-in service is temporarily unavailable.';
+  return fallback;
+}
+
+function stringProperty(value: unknown, property: string): string | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const item = (value as Record<string, unknown>)[property];
+  return typeof item === 'string' && item.trim() ? item.trim() : null;
+}
+
+function firstValidationError(errors: unknown): string | null {
+  if (Array.isArray(errors)) return errors.find(item => typeof item === 'string' && item.trim())?.trim() ?? null;
+  if (typeof errors !== 'object' || errors === null) return null;
+  for (const value of Object.values(errors)) {
+    if (Array.isArray(value)) {
+      const message = value.find(item => typeof item === 'string' && item.trim());
+      if (typeof message === 'string') return message.trim();
+    }
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
 }
