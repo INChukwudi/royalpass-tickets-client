@@ -9,12 +9,12 @@ import { ToastService } from '../../../core/services/toast.service';
 export class EmailDeliveriesComponent implements OnInit{
   private readonly admin=inject(AdminService);private readonly toast=inject(ToastService);
   readonly items=signal<EmailDelivery[]>([]);readonly loading=signal(true);readonly total=signal(0);
-  readonly pageSize=30;page=1;status='';search='';
+  readonly pageSize=30;readonly retryingId=signal<string|null>(null);page=1;status='';search='';
   get lastPage():number{return Math.max(1,Math.ceil(this.total()/this.pageSize));}
   ngOnInit():void{this.load();}
   load():void{this.loading.set(true);this.admin.emailDeliveries(this.page,this.pageSize,this.status,this.search.trim()).subscribe({next:r=>{this.items.set(r.items);this.total.set(r.total);this.page=r.page;this.loading.set(false);},error:()=>{this.loading.set(false);this.toast.error('Could not load email deliveries.');}});}
   apply():void{this.page=1;this.load();}
   changeStatus():void{this.page=1;this.load();}
   move(delta:number):void{const next=this.page+delta;if(next<1||next>this.lastPage)return;this.page=next;this.load();}
-  retry(item:EmailDelivery):void{this.admin.retryEmailDelivery(item.id).subscribe({next:()=>{this.toast.success('Email retry queued.');this.load();},error:e=>this.toast.error(e?.error?.message??'Could not queue retry.')});}
+  retry(item:EmailDelivery):void{if(this.retryingId())return;this.retryingId.set(item.id);this.admin.retryEmailDelivery(item.id).subscribe({next:()=>{this.retryingId.set(null);this.toast.success('Email queued for immediate delivery.');this.load();},error:e=>{this.retryingId.set(null);this.toast.error(e?.error?.message??'Could not queue email for immediate delivery.');}});}
 }

@@ -33,7 +33,7 @@
               </td>
               <td>{{ item.attemptCount | number:'1.0-0' }}</td>
               <td>{{ (item.complainedAt || item.deliveredAt || item.failedAt || item.sentAt) | date:'MMM. d, y, h:mm a' }}</td>
-              <td>@if (item.status === 'Failed') { <button (click)="retry(item)">Retry</button> }</td>
+              <td>@if (item.status === 'Failed' || item.status === 'Pending') { <button type="button" (click)="retry(item)" [disabled]="retryingId() !== null">{{ retryingId() === item.id ? 'Queueing…' : item.status === 'Pending' ? 'Send now' : 'Retry' }}</button> }</td>
             </tr>
           } @empty {
             <tr><td colspan="7">No email deliveries found.</td></tr>
