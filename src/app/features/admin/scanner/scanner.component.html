@@ -3,9 +3,9 @@
   <div class="scanner-grid">
     <section class="panel">
       <h2>Camera</h2>
-      <zxing-scanner [autostart]="true" [enable]="cameraEnabled && !processing() && !seatModalOpen()" [formats]="formats" [tryHarder]="true" [autofocusEnabled]="true" [videoConstraints]="videoConstraints" [delayBetweenScanSuccess]="1500" (scanSuccess)="scanSuccess($event)" (permissionResponse)="permissionResponse($event)" (camerasFound)="camerasFound($event)" (camerasNotFound)="camerasFound([])" (scanError)="cameraError()" />
+      <div id="gate-qr-reader" class="qr-reader" aria-label="Ticket QR code camera"></div>
       <p class="camera-message">{{cameraMessage()}}</p>
-      <button type="button" (click)="cameraEnabled=!cameraEnabled">{{cameraEnabled?'Stop camera':'Start camera'}}</button>
+      <button type="button" (click)="toggleCamera()">{{cameraRunning()?'Stop camera':'Start camera'}}</button>
     </section>
 
     <section class="panel">
