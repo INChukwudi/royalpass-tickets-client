@@ -1,11 +1,44 @@
 <div class="scanner-page">
   <h1>Gate Scanner</h1>
   <div class="scanner-grid">
-    <section class="panel"><h2>Camera</h2><zxing-scanner [enable]="cameraEnabled && !processing()" (scanSuccess)="scanSuccess($event)" /><button (click)="cameraEnabled = !cameraEnabled">{{ cameraEnabled ? 'Stop camera' : 'Start camera' }}</button></section>
-    <section class="panel"><h2>Manual scan token</h2><div class="entry"><input [(ngModel)]="code" (keydown.enter)="submit()" placeholder="rpt_..."><button (click)="submit()" [disabled]="processing()">Validate</button></div>
-      @if (result(); as r) { <div class="result" [class.admit]="r.decision === 'admitted'" [class.warn]="r.decision === 'already_used'"><h3>{{ r.decision.replace('_', ' ') }}</h3><p>{{ r.message }}</p>@if(r.guestName){<strong>{{r.guestName}}</strong><span>{{r.eventTitle}} / {{r.ticketType}}</span><h2>SEAT {{r.seatLabel || 'UNASSIGNED'}}</h2>}</div> }
-      <h2>Find attendee</h2><div class="entry"><input [(ngModel)]="query" (keydown.enter)="search()" placeholder="Name, phone or code"><button (click)="search()">Search</button></div>
-      @for(t of matches();track t.ticketId){<div class="match"><span><strong>{{t.guestName}}</strong>{{t.ticketCode}} / {{t.status}} / Seat {{t.seatLabel || 'unassigned'}}</span>@if(t.status==='Active'){<button (click)="admit(t)">Admit</button>}</div>}
+    <section class="panel">
+      <h2>Camera</h2>
+      <zxing-scanner [autostart]="true" [enable]="cameraEnabled && !processing() && !seatModalOpen()" [formats]="formats" [tryHarder]="true" [autofocusEnabled]="true" [videoConstraints]="videoConstraints" [delayBetweenScanSuccess]="1500" (scanSuccess)="scanSuccess($event)" (permissionResponse)="permissionResponse($event)" (camerasFound)="camerasFound($event)" (camerasNotFound)="camerasFound([])" (scanError)="cameraError()" />
+      <p class="camera-message">{{cameraMessage()}}</p>
+      <button type="button" (click)="cameraEnabled=!cameraEnabled">{{cameraEnabled?'Stop camera':'Start camera'}}</button>
+    </section>
+
+    <section class="panel">
+      <h2>Enter ticket number</h2>
+      <p class="entry-help">Use the visible number printed below the QR code, for example <strong>TKT-ABC123456789</strong>.</p>
+      <div class="entry"><input [(ngModel)]="code" (keydown.enter)="prepare()" placeholder="TKT-XXXXXXXXXXXX" autocomplete="off" autocapitalize="characters"><button type="button" (click)="prepare()" [disabled]="processing()">{{processing()?'Checking…':'Find ticket'}}</button></div>
+
+      @if(details();as ticket){
+        <article class="ticket-preview">
+          <div class="preview-heading"><span class="material-icons">person</span><div><small>Ticket owner</small><h3>{{ticket.guestName}}</h3><p>{{ticket.guestEmail}}</p></div></div>
+          <dl><div><dt>Ticket</dt><dd>{{ticket.ticketCode}}</dd></div><div><dt>Event</dt><dd>{{ticket.eventTitle}}</dd></div><div><dt>Category</dt><dd>{{ticket.ticketType}}</dd></div><div><dt>Status</dt><dd>{{ticket.status}}</dd></div><div><dt>Seat</dt><dd>{{ticket.seatLabel||'Not assigned'}}</dd></div></dl>
+          <p class="preview-message">{{ticket.message}}</p>
+          @if(ticket.canCheckIn&&ticket.seatLabel){<button class="check-in" type="button" (click)="checkIn()" [disabled]="processing()"><span class="material-icons">how_to_reg</span>{{processing()?'Checking in…':'Check in guest'}}</button>}
+          @else if(ticket.canCheckIn){<button type="button" (click)="seatModalOpen.set(true)">Assign seat before check-in</button>}
+        </article>
+      }
+
+      @if(result();as r){<div class="result" [class.admit]="r.decision==='admitted'" [class.warn]="r.decision==='already_used'"><h3>{{r.decision.replace('_',' ')}}</h3><p>{{r.message}}</p>@if(r.guestName){<strong>{{r.guestName}}</strong><span>{{r.eventTitle}} / {{r.ticketType}}</span><h2>SEAT {{r.seatLabel||'UNASSIGNED'}}</h2>}</div>}
+
+      <h2>Find attendee</h2>
+      <div class="entry"><input [(ngModel)]="query" (keydown.enter)="search()" placeholder="Name, phone or TKT number"><button type="button" (click)="search()">Search</button></div>
+      @for(t of matches();track t.ticketId){<div class="match"><span><strong>{{t.guestName}}</strong>{{t.ticketCode}} / {{t.status}} / Seat {{t.seatLabel||'unassigned'}}</span><button type="button" (click)="review(t)">Review</button></div>}
     </section>
   </div>
 </div>
+
+@if(seatModalOpen()&&details();as ticket){
+  <div class="modal-backdrop" role="presentation">
+    <section class="seat-modal" role="dialog" aria-modal="true" aria-labelledby="seat-modal-title">
+      <span class="material-icons modal-icon">event_seat</span>
+      <h2 id="seat-modal-title">Seat required before check-in</h2>
+      <p><strong>{{ticket.guestName}}</strong> does not yet have a seat. Assign the next available seat in the <strong>{{ticket.ticketType}}</strong> category.</p>
+      <div class="modal-actions"><button type="button" class="secondary" (click)="seatModalOpen.set(false)" [disabled]="assigningSeat()">Cancel</button><button type="button" (click)="assignSeat()" [disabled]="assigningSeat()">{{assigningSeat()?'Assigning…':'Assign next available seat'}}</button></div>
+    </section>
+  </div>
+}
