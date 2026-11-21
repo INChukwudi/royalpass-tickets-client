@@ -1,6 +1,6 @@
 export interface GameOption { id:string|null;text:string;position:number;isCorrect:boolean; }
 export interface GameQuestion { id:string|null;prompt:string;position:number;timeLimitSeconds:number;points:number;options:GameOption[]; }
-export interface Game { id:string;eventId:string;eventTitle:string;title:string;description:string|null;leaderboardEveryQuestions:number;isArchived:boolean;sessionCount:number;questions:GameQuestion[]; }
+export interface Game { id:string;eventId:string;eventTitle:string;title:string;description:string|null;leaderboardEveryQuestions:number;isArchived:boolean;sessionCount:number;activeSessionId:string|null;activeSessionStatus:string|null;questions:GameQuestion[]; }
 export interface SaveGame { eventId:string;title:string;description:string|null;leaderboardEveryQuestions:number;questions:GameQuestion[]; }
 export interface LeaderboardRow { rank:number;seatLabel:string;score:number; }
 export interface HostQuestion extends GameQuestion { answerCounts:Record<string,number>; }
