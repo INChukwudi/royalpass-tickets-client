@@ -22,9 +22,10 @@ export class GameRealtimeService {
     const connection=new HubConnectionBuilder().withUrl(url,{
       withCredentials:true,
       transport:HttpTransportType.WebSockets|HttpTransportType.LongPolling,
-      timeout:15000
+      timeout:8000
     })
-      .withAutomaticReconnect({nextRetryDelayInMilliseconds:context=>[0,1000,2000,5000,10000,15000][context.previousRetryCount]??30000})
+      .withAutomaticReconnect({nextRetryDelayInMilliseconds:context=>[0,500,1000,2000,5000,10000][context.previousRetryCount]??15000})
+      .withStatefulReconnect({bufferSize:100000})
       .configureLogging(LogLevel.Warning).build();
     connection.keepAliveIntervalInMilliseconds=10000;
     connection.serverTimeoutInMilliseconds=30000;
