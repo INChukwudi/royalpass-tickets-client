@@ -63,11 +63,6 @@ export class AdminLayoutComponent {
     const mobile = window.innerWidth < 992;
     this.isMobile.set(mobile);
     this.sidenavMode.set(mobile ? 'over' : 'side');
-    if (!mobile) {
-      this.sidenavOpen.set(true);
-    } else {
-      this.sidenavOpen.set(false);
-    }
   }
 
   toggleSidenav() {
