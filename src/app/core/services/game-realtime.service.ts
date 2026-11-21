@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import { HubConnection, HubConnectionBuilder, HttpTransportType, LogLevel } from '@microsoft/signalr';
 import { environment } from '../../../environments/environment';
 
 @Injectable({providedIn:'root'})
@@ -19,9 +19,15 @@ export class GameRealtimeService {
   }
 
   private async connect(url:string,joinArguments:unknown[],onUpdate:()=>void,onConnected:(connected:boolean)=>void,joinMethod='JoinSession'):Promise<HubConnection>{
-    const connection=new HubConnectionBuilder().withUrl(url,{withCredentials:true})
-      .withAutomaticReconnect({nextRetryDelayInMilliseconds:context=>Math.min(30000,1000*2**Math.min(context.previousRetryCount,5))})
+    const connection=new HubConnectionBuilder().withUrl(url,{
+      withCredentials:true,
+      transport:HttpTransportType.WebSockets|HttpTransportType.LongPolling,
+      timeout:15000
+    })
+      .withAutomaticReconnect({nextRetryDelayInMilliseconds:context=>[0,1000,2000,5000,10000,15000][context.previousRetryCount]??30000})
       .configureLogging(LogLevel.Warning).build();
+    connection.keepAliveIntervalInMilliseconds=10000;
+    connection.serverTimeoutInMilliseconds=30000;
     const joinGroup=()=>connection.invoke(joinMethod,...joinArguments);
     let updateTimer:ReturnType<typeof setTimeout>|undefined;
     connection.on('gameUpdated',()=>{if(updateTimer)return;updateTimer=setTimeout(()=>{updateTimer=undefined;onUpdate();},100);});
@@ -31,4 +37,5 @@ export class GameRealtimeService {
     await connection.start();await joinGroup();onConnected(true);
     return connection;
   }
+
 }
