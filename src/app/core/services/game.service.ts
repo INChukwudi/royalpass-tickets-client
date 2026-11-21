@@ -11,6 +11,7 @@ export class GameService {
   get(id:string):Observable<Game>{return this.http.get<Game>(`${this.base}/admin/games/${id}`);}
   create(value:SaveGame):Observable<Game>{return this.http.post<Game>(`${this.base}/admin/games`,value);}
   update(id:string,value:SaveGame):Observable<Game>{return this.http.put<Game>(`${this.base}/admin/games/${id}`,value);}
+  delete(id:string):Observable<void>{return this.http.delete<void>(`${this.base}/admin/games/${id}`);}
   createSession(id:string):Observable<{sessionId:string;pin:string}>{return this.http.post<{sessionId:string;pin:string}>(`${this.base}/admin/games/${id}/sessions`,{});}
   hostState(id:string):Observable<HostGameState>{return this.http.get<HostGameState>(`${this.base}/admin/game-sessions/${id}`);}
   hostAction(id:string,action:string):Observable<HostGameState>{return this.http.post<HostGameState>(`${this.base}/admin/game-sessions/${id}/${action}`,{});}
