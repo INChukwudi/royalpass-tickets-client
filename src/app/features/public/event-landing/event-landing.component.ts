@@ -93,13 +93,24 @@ export class EventLandingComponent implements OnInit, OnDestroy {
 
   private async connectGameDiscovery(): Promise<void> {
     try {
-      const connection = await this.gameRealtime.discovery(() => this.loadActiveGames(), () => undefined);
+      const connection = await this.gameRealtime.discovery(
+        () => this.loadActiveGames(),
+        () => undefined,
+        () => this.scheduleGameDiscoveryReconnect()
+      );
       if (this.destroyed) { await connection.stop(); return; }
       this.gameConnection = connection;
     } catch {
-      if (!this.destroyed)
-        this.gameReconnectTimer = setTimeout(() => void this.connectGameDiscovery(), 2000);
+      this.scheduleGameDiscoveryReconnect();
     }
+  }
+
+  private scheduleGameDiscoveryReconnect(): void {
+    if (this.destroyed || this.gameReconnectTimer) return;
+    this.gameReconnectTimer = setTimeout(() => {
+      this.gameReconnectTimer = undefined;
+      void this.connectGameDiscovery();
+    }, 2000);
   }
 
   private loadEvents(): void {
