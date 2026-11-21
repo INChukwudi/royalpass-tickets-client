@@ -34,6 +34,7 @@ export class EventLandingComponent implements OnInit, OnDestroy {
   private readonly games = inject(GameService);
   private readonly gameRealtime = inject(GameRealtimeService);
   private gameConnection?: HubConnection;
+  private gameReconnectTimer?: ReturnType<typeof setTimeout>;
   private destroyed = false;
 
   // State
@@ -78,6 +79,7 @@ export class EventLandingComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    if (this.gameReconnectTimer) clearTimeout(this.gameReconnectTimer);
     void this.gameConnection?.stop();
   }
 
@@ -94,7 +96,10 @@ export class EventLandingComponent implements OnInit, OnDestroy {
       const connection = await this.gameRealtime.discovery(() => this.loadActiveGames(), () => undefined);
       if (this.destroyed) { await connection.stop(); return; }
       this.gameConnection = connection;
-    } catch { /* The public page still refreshes active games on its next load. */ }
+    } catch {
+      if (!this.destroyed)
+        this.gameReconnectTimer = setTimeout(() => void this.connectGameDiscovery(), 2000);
+    }
   }
 
   private loadEvents(): void {
