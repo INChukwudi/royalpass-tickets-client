@@ -39,6 +39,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/public/ticket-transfer/ticket-transfer.component').then(m => m.TicketTransferComponent)
       },
+      {
+        path: 'games/join',
+        loadComponent: () => import('./features/public/games/game-join.component').then(m => m.GameJoinComponent)
+      },
+      {
+        path: 'games/play',
+        loadComponent: () => import('./features/public/games/game-play.component').then(m => m.GamePlayComponent)
+      },
     ]
   },
 
@@ -128,6 +136,16 @@ export const routes: Routes = [
         canActivate: [permissionGuard(ADMIN_PERMISSIONS.checkInTickets)],
         loadComponent: () =>
           import('./features/admin/scanner/scanner.component').then(m => m.ScannerComponent)
+      },
+      {
+        path: 'games',
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageGames)],
+        loadComponent: () => import('./features/admin/games/games.component').then(m => m.GamesComponent)
+      },
+      {
+        path: 'games/host/:sessionId',
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageGames)],
+        loadComponent: () => import('./features/admin/games/game-host.component').then(m => m.GameHostComponent)
       },
       {
         path: 'reports',

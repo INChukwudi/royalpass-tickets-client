@@ -22,6 +22,7 @@ export const ADMIN_PERMISSIONS = {
   manageSeats: 'seats.manage',
   manageReferrals: 'referrals.manage',
   manageEmailDelivery: 'email-delivery.manage',
+  manageGames: 'games.manage',
 } as const;
 
 export interface LoginRequest {
