@@ -25,7 +25,6 @@ export class GameRealtimeService {
       timeout:20000
     })
       .withAutomaticReconnect({nextRetryDelayInMilliseconds:context=>[0,500,1000,2000,5000,10000,15000][context.previousRetryCount]??null})
-      .withStatefulReconnect({bufferSize:100000})
       .configureLogging(LogLevel.Warning).build();
     connection.keepAliveIntervalInMilliseconds=10000;
     connection.serverTimeoutInMilliseconds=45000;
