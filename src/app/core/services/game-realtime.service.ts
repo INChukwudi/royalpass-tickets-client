@@ -14,11 +14,15 @@ export class GameRealtimeService {
     return this.connect(`${this.hubBase}/hubs/games/participant`,[token],onUpdate,onConnected);
   }
 
-  private async connect(url:string,joinArguments:unknown[],onUpdate:()=>void,onConnected:(connected:boolean)=>void):Promise<HubConnection>{
+  discovery(onUpdate:()=>void,onConnected:(connected:boolean)=>void):Promise<HubConnection>{
+    return this.connect(`${this.hubBase}/hubs/games/participant`,[],onUpdate,onConnected,'JoinDiscovery');
+  }
+
+  private async connect(url:string,joinArguments:unknown[],onUpdate:()=>void,onConnected:(connected:boolean)=>void,joinMethod='JoinSession'):Promise<HubConnection>{
     const connection=new HubConnectionBuilder().withUrl(url,{withCredentials:true})
       .withAutomaticReconnect({nextRetryDelayInMilliseconds:context=>Math.min(30000,1000*2**Math.min(context.previousRetryCount,5))})
       .configureLogging(LogLevel.Warning).build();
-    const joinGroup=()=>connection.invoke('JoinSession',...joinArguments);
+    const joinGroup=()=>connection.invoke(joinMethod,...joinArguments);
     let updateTimer:ReturnType<typeof setTimeout>|undefined;
     connection.on('gameUpdated',()=>{if(updateTimer)return;updateTimer=setTimeout(()=>{updateTimer=undefined;onUpdate();},100);});
     connection.onreconnecting(()=>onConnected(false));

@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Game, GameLobby, HostGameState, ParticipantGameState, SaveGame } from '../models/game.models';
+import { ActiveGameLobby, Game, GameLobby, HostGameState, ParticipantGameState, SaveGame } from '../models/game.models';
 
 @Injectable({providedIn:'root'})
 export class GameService {
@@ -15,6 +15,7 @@ export class GameService {
   hostState(id:string):Observable<HostGameState>{return this.http.get<HostGameState>(`${this.base}/admin/game-sessions/${id}`);}
   hostAction(id:string,action:string):Observable<HostGameState>{return this.http.post<HostGameState>(`${this.base}/admin/game-sessions/${id}/${action}`,{});}
   lobby(pin:string):Observable<GameLobby>{return this.http.get<GameLobby>(`${this.base}/games/${encodeURIComponent(pin)}/seats`);}
+  activeLobbies():Observable<ActiveGameLobby[]>{return this.http.get<ActiveGameLobby[]>(`${this.base}/games/active`);}
   join(pin:string,seatId:string):Observable<{participantToken:string;seatLabel:string;gameTitle:string}>{return this.http.post<{participantToken:string;seatLabel:string;gameTitle:string}>(`${this.base}/games/join`,{pin,seatId});}
   participantState(token:string):Observable<ParticipantGameState>{return this.http.get<ParticipantGameState>(`${this.base}/games/state`,{headers:this.tokenHeader(token)});}
   answer(token:string,questionId:string,optionId:string):Observable<{accepted:boolean}>{return this.http.post<{accepted:boolean}>(`${this.base}/games/answers`,{questionId,optionId},{headers:this.tokenHeader(token)});}

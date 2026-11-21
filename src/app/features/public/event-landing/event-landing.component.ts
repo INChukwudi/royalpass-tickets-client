@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,6 +8,10 @@ import { OrderService } from '../../../core/services/order.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EventDetailDto, TicketTypeDto } from '../../../core/models/event.models';
 import { publicErrorMessage } from '../../../core/utils/public-error-message';
+import { ActiveGameLobby } from '../../../core/models/game.models';
+import { GameService } from '../../../core/services/game.service';
+import { GameRealtimeService } from '../../../core/services/game-realtime.service';
+import { HubConnection } from '@microsoft/signalr';
 
 declare const AOS: any;
 
@@ -23,16 +27,22 @@ interface CartItem {
   templateUrl: './event-landing.component.html',
   styleUrl: './event-landing.component.scss'
 })
-export class EventLandingComponent implements OnInit {
+export class EventLandingComponent implements OnInit, OnDestroy {
   private readonly eventService = inject(EventService);
   private readonly orderService = inject(OrderService);
   private readonly toast = inject(ToastService);
+  private readonly games = inject(GameService);
+  private readonly gameRealtime = inject(GameRealtimeService);
+  private gameConnection?: HubConnection;
+  private destroyed = false;
 
   // State
   events = signal<EventDetailDto[]>([]);
   selectedEvent = signal<EventDetailDto | null>(null);
   isLoading = signal(true);
   isSubmitting = signal(false);
+  activeGames = signal<Record<string, ActiveGameLobby>>({});
+  activeGameList = computed(() => Object.values(this.activeGames()));
 
   // Cart: ticketTypeId -> quantity
   cart = signal<Record<string, number>>({});
@@ -62,6 +72,29 @@ export class EventLandingComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadEvents();
+    this.loadActiveGames();
+    void this.connectGameDiscovery();
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    void this.gameConnection?.stop();
+  }
+
+  activeGame(eventId: string): ActiveGameLobby | undefined { return this.activeGames()[eventId]; }
+
+  private loadActiveGames(): void {
+    this.games.activeLobbies().subscribe({ next: lobbies => this.activeGames.set(
+      Object.fromEntries(lobbies.map(lobby => [lobby.eventId, lobby]))
+    ) });
+  }
+
+  private async connectGameDiscovery(): Promise<void> {
+    try {
+      const connection = await this.gameRealtime.discovery(() => this.loadActiveGames(), () => undefined);
+      if (this.destroyed) { await connection.stop(); return; }
+      this.gameConnection = connection;
+    } catch { /* The public page still refreshes active games on its next load. */ }
   }
 
   private loadEvents(): void {

@@ -22,6 +22,25 @@
     </div>
   </section>
 
+  @if (activeGameList().length) {
+    <section class="live-games-section" aria-labelledby="live-games-title">
+      <div class="container">
+        <div class="live-games-heading">
+          <span class="live-game__pulse"></span>
+          <div><small>Happening now</small><h2 id="live-games-title">Join the live game</h2></div>
+        </div>
+        <div class="live-games-list">
+          @for (game of activeGameList(); track game.eventId) {
+            <a class="live-game live-game--banner" routerLink="/games/join" [queryParams]="{pin: game.pin}">
+              <span><strong>{{ game.gameTitle }}</strong><small>{{ game.eventTitle }} · Join with your seat number</small></span>
+              <span>Join now</span><span class="material-icons">arrow_forward</span>
+            </a>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
   <!-- Loading -->
   @if (isLoading()) {
     <section class="section section--dark" id="events">
@@ -68,6 +87,13 @@
               </div>
               <div class="event-card__body">
                 <h3 class="event-card__title">{{ evt.title }}</h3>
+                @if (activeGame(evt.id); as game) {
+                  <a class="live-game" routerLink="/games/join" [queryParams]="{pin: game.pin}">
+                    <span class="live-game__pulse"></span>
+                    <span><strong>{{ game.gameTitle }}</strong><small>Live game open — join with your seat</small></span>
+                    <span class="material-icons">arrow_forward</span>
+                  </a>
+                }
                 <div class="event-card__info">
                   <span><span class="material-icons">calendar_today</span> {{ evt.eventDate | date:'EEE, MMM. d, y' }}</span>
                   <span><span class="material-icons">schedule</span> {{ evt.eventDate | date:'h:mm a' }}</span>
