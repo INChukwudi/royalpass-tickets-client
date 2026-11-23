@@ -1,0 +1,9 @@
+export interface FeedbackSettings { isEnabled:boolean;requireTicketVerification:boolean;opensAt:string|null;closesAt:string|null;welcomeMessage:string; }
+export interface PublicFeedbackForm { eventId:string;eventTitle:string;bannerUrl:string|null;venue:string;eventDate:string;welcomeMessage:string;isOpen:boolean;requireTicketVerification:boolean;closesAt:string|null; }
+export interface FeedbackResponseRow { id:string;submittedAt:string;respondent:string;overallRating:number;recommendScore:number;wouldAttendAgain:boolean;interestedInRoyalPass:boolean;mayContact:boolean;contactEmail:string|null;contactPhone:string|null;eventType:string|null;favouriteMoment:string|null;improvements:string|null;comments:string|null; }
+export interface FeedbackDashboard { eventId:string;eventTitle:string;settings:FeedbackSettings;responses:number;averageRating:number;netPromoterScore:number;attendAgainPercent:number;interestedInRoyalPassCount:number;contactableLeads:number;categoryRatings:Record<string,number>;improvementTopics:Record<string,number>;recentResponses:FeedbackResponseRow[]; }
+export interface FeedbackSubmission {
+  ticketCode:string;ticketEmail:string;respondentName:string;respondentEmail:string;
+  overallRating:number;recommendScore:number;organizationRating:number;programmeRating:number;venueRating:number;productionRating:number;checkInRating:number;seatingRating:number;staffRating:number;ticketPurchaseRating:number;paymentRating:number;ticketDeliveryRating:number;seatSelectionRating:number;
+  favouriteMoment:string;improvements:string;keepForNextTime:string;additionalComments:string;improvementTopics:string[];wouldAttendAgain:boolean;interestedInRoyalPass:boolean;mayContact:boolean;contactName:string;contactEmail:string;contactPhone:string;prospectiveEventType:string;prospectiveEventDetails:string;testimonialConsent:boolean;
+}

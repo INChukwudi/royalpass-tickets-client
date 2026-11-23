@@ -47,6 +47,10 @@ export const routes: Routes = [
         path: 'games/play',
         loadComponent: () => import('./features/public/games/game-play.component').then(m => m.GamePlayComponent)
       },
+      {
+        path: 'events/:eventId/feedback',
+        loadComponent: () => import('./features/public/feedback/feedback.component').then(m => m.FeedbackComponent)
+      },
     ]
   },
 
@@ -107,6 +111,11 @@ export const routes: Routes = [
         canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageEvents)],
         loadComponent: () =>
           import('./features/admin/events/event-form/event-form.component').then(m => m.EventFormComponent)
+      },
+      {
+        path: 'feedback',
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageEvents)],
+        loadComponent: () => import('./features/admin/feedback/feedback-admin.component').then(m => m.FeedbackAdminComponent)
       },
       {
         path: 'orders',

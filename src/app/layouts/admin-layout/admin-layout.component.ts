@@ -33,6 +33,7 @@ export class AdminLayoutComponent {
   private readonly navItems: NavItem[] = [
     { label: 'Dashboard',    icon: 'dashboard',          route: '/admin/dashboard', permission: ADMIN_PERMISSIONS.viewDashboard },
     { label: 'Events',       icon: 'event',              route: '/admin/events', permission: ADMIN_PERMISSIONS.manageEvents },
+    { label: 'Feedback',     icon: 'reviews',            route: '/admin/feedback', permission: ADMIN_PERMISSIONS.manageEvents },
     { label: 'Orders',       icon: 'receipt_long',       route: '/admin/orders', permission: ADMIN_PERMISSIONS.viewOrders },
     { label: 'Manual Sale',  icon: 'post_add',           route: '/admin/orders/manual', permission: ADMIN_PERMISSIONS.createManualOrders },
     { label: 'Tickets',      icon: 'confirmation_number',route: '/admin/tickets', permission: ADMIN_PERMISSIONS.viewTickets },
