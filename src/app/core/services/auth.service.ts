@@ -126,6 +126,7 @@ export class AuthService {
   landingRoute(): string {
     const choices: Array<[string, string]> = [
       ['dashboard.view', '/admin/dashboard'], ['events.manage', '/admin/events'],
+      ['feedback.manage', '/admin/feedback'],
       ['orders.view', '/admin/orders'], ['orders.manual.create', '/admin/orders/manual'],
       ['tickets.view', '/admin/tickets'], ['tickets.checkin', '/admin/scanner'],
         ['games.manage', '/admin/games'],

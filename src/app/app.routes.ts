@@ -114,7 +114,7 @@ export const routes: Routes = [
       },
       {
         path: 'feedback',
-        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageEvents)],
+        canActivate: [permissionGuard(ADMIN_PERMISSIONS.manageFeedback)],
         loadComponent: () => import('./features/admin/feedback/feedback-admin.component').then(m => m.FeedbackAdminComponent)
       },
       {
