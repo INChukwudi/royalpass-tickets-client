@@ -8,7 +8,7 @@ import { publicErrorMessage } from '../../../core/utils/public-error-message';
 
 const emptyFeedback=():FeedbackSubmission=>({ticketCode:'',ticketEmail:'',respondentName:'',respondentEmail:'',overallRating:0,recommendScore:10,organizationRating:0,programmeRating:0,venueRating:0,productionRating:0,checkInRating:0,seatingRating:0,staffRating:0,ticketPurchaseRating:0,paymentRating:0,ticketDeliveryRating:0,seatSelectionRating:0,favouriteMoment:'',improvements:'',keepForNextTime:'',additionalComments:'',improvementTopics:[],wouldAttendAgain:true,interestedInRoyalPass:false,mayContact:false,contactName:'',contactEmail:'',contactPhone:'',prospectiveEventType:'',prospectiveEventDetails:'',testimonialConsent:false});
 
-@Component({selector:'app-feedback',standalone:true,imports:[CommonModule,FormsModule,RouterLink],templateUrl:'./feedback.component.html',styleUrl:'./feedback.component.scss'})
+@Component({selector:'app-feedback',standalone:true,imports:[CommonModule,FormsModule,RouterLink],templateUrl:'./feedback.component.html',styleUrls:['./feedback.component.scss','./feedback-intro.component.scss']})
 export class FeedbackComponent{
  private readonly api=inject(FeedbackService);private readonly route=inject(ActivatedRoute);readonly eventId=this.route.snapshot.paramMap.get('eventId')??'';private readonly draftKey=`royalpass_feedback_${this.eventId}`;
  readonly form=signal<PublicFeedbackForm|null>(null);readonly loading=signal(true);readonly submitting=signal(false);readonly complete=signal(false);readonly error=signal('');readonly step=signal(0);readonly progress=computed(()=>((this.step()+1)/5)*100);
